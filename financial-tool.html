@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>כלי חישוב להשקעות</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#0a0e1a; --surface:#111827; --surface2:#1a2236; --border:#1e2d45;
+  --accent:#00d4aa; --accent2:#3b82f6; --accent3:#f59e0b;
+  --danger:#ef4444; --purple:#a855f7;
+  --text:#e2e8f0; --text-muted:#64748b; --text-dim:#94a3b8; --radius:12px;
+  --slider-fill:#00d4aa; --slider-track:#1e2d45;
+}
+body.light {
+  --bg:#f0f4f8; --surface:#ffffff; --surface2:#e8edf5; --border:#cbd5e1;
+  --text:#0f172a; --text-muted:#64748b; --text-dim:#475569;
+  --slider-track:#cbd5e1;
+}
+body.light .card { background:#ffffff; border-color:#cbd5e1; }
+body.light .inset-card { background:rgba(245,158,11,0.07); border-color:rgba(245,158,11,0.25); }
+body.light .scenario-col { background:#e8edf5; border-color:#cbd5e1; }
+body.light .result-box { background:linear-gradient(135deg,rgba(0,212,170,0.07),rgba(59,130,246,0.07)); }
+body.light .result-box.blue { background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(168,85,247,0.07)); }
+body.light .result-box.purple { background:linear-gradient(135deg,rgba(168,85,247,0.07),rgba(59,130,246,0.07)); }
+body.light .result-box.orange { background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(239,68,68,0.07)); }
+body.light .note { background:rgba(245,158,11,0.09); }
+body.light .note-blue { background:rgba(59,130,246,0.08); }
+body.light .info-box { background:rgba(59,130,246,0.05); border-color:rgba(59,130,246,0.2); }
+body.light .rule-box { background:rgba(168,85,247,0.05); border-color:rgba(168,85,247,0.2); }
+body.light .chips .chip { background:#e8edf5; }
+body.light .date-display { background:#e8edf5; }
+body.light .date-dropdown { background:#ffffff; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
+body.light .month-btn { background:#e8edf5; }
+body.light .date-nav-btn { background:#e8edf5; }
+body.light nav { background:#ffffff; border-color:#cbd5e1; }
+body.light .nav-tab:hover { background:#e8edf5; }
+body.light .currency-toggle { background:#ffffff; border-color:#cbd5e1; }
+body.light .toggle-track { background:#e8edf5; border-color:#cbd5e1; }
+body.light .theme-btn { background:#ffffff; border-color:#cbd5e1; }
+body.light .duration-unit-btn { background:#e8edf5; border-color:#cbd5e1; }
+body.light input, body.light select { background:#ffffff; color:#0f172a; border-color:#cbd5e1; }
+body.light td { border-bottom:1px solid rgba(0,0,0,0.05); }
+body.light tr:hover td { background:rgba(0,0,0,0.02); }
+body.light .result-stat { background:rgba(0,0,0,0.04); }
+body.light .benchmark-item { background:rgba(0,0,0,0.04); }
+body.light input[type="range"]::-webkit-slider-thumb { border-color:#f0f4f8; width:24px; height:24px; } input[type="range"]::-moz-range-thumb { width:24px; height:24px; border-radius:50%; background:var(--accent); border:none; cursor:pointer; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Heebo',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; direction:rtl; transition:background 0.25s,color 0.25s; }
+
+/* HEADER */
+header {
+  background:linear-gradient(135deg,#0a0e1a 0%,#0f1f38 100%);
+  border-bottom:1px solid var(--border);
+  padding:10px 16px;
+  display:flex; align-items:center; gap:10px;
+  position:sticky; top:0; z-index:100; backdrop-filter:blur(12px);
+}
+body.light header { background:linear-gradient(135deg,#fff 0%,#e8edf5 100%); }
+.logo { font-size:1.3rem; font-weight:900; letter-spacing:-0.5px; color:var(--accent); cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.logo span { color:var(--text); }
+.header-right { display:flex; align-items:center; gap:8px; flex:1; overflow-x:auto;-webkit-overflow-scrolling:touch; justify-content:flex-end; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.header-right::-webkit-scrollbar { display:none; }
+
+/* CURRENCY TOGGLE */
+.currency-toggle { display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:4px 12px 4px 5px; flex-shrink:0; }
+.currency-toggle label { font-size:0.78rem; font-weight:700; color:var(--text-muted); cursor:pointer; }
+.toggle-track { width:40px; height:22px; background:var(--surface2); border:1px solid var(--border); border-radius:11px; position:relative; cursor:pointer; transition:background 0.25s; flex-shrink:0; }
+.toggle-track.usd { background:linear-gradient(135deg,#3b82f6,#1d4ed8); border-color:#3b82f6; }
+.toggle-thumb { position:absolute; top:2px; right:2px; width:16px; height:16px; background:#fff; border-radius:50%; transition:all 0.25s; }
+.toggle-track.usd .toggle-thumb { right:auto; left:2px; }
+.cur-label { font-size:0.85rem; font-weight:800; min-width:16px; cursor:pointer; transition:color 0.2s; user-select:none; }
+.cur-label.active-cur { color:var(--accent); }
+.cur-label.inactive-cur { color:var(--text-muted); }
+
+/* THEME BUTTON */
+.theme-btn { display:flex; align-items:center; gap:5px; padding:6px 11px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); font-family:'Heebo',sans-serif; font-size:0.78rem; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition:border-color 0.2s,color 0.2s; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+.theme-btn:active { transform:scale(0.95); }
+
+/* NAV */
+nav { display:flex; gap:2px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:3px; flex-wrap:nowrap; min-width:max-content; }
+.nav-tab { padding:6px 10px; border-radius:7px; border:none; background:transparent; color:var(--text-muted); font-family:'Heebo',sans-serif; font-size:0.78rem; font-weight:500; cursor:pointer; transition:all 0.2s; white-space:nowrap; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+.nav-tab:hover { color:var(--text); background:var(--surface2); }
+.nav-tab.active { background:var(--accent); color:#000; font-weight:700; }
+
+/* MAIN */
+main { max-width:1100px; margin:0 auto; padding:24px 16px; }
+.module { display:none; }
+.module.active { display:block; animation:fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+.module-title { font-size:1.6rem; font-weight:900; margin-bottom:6px; }
+.module-subtitle { color:var(--text-muted); font-size:0.9rem; margin-bottom:22px; }
+
+/* CARDS */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
+.card-title { font-size:0.92rem; font-weight:700; color:var(--accent); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.card-title::before { content:''; width:4px; height:15px; background:var(--accent); border-radius:2px; display:inline-block; flex-shrink:0; }
+.card-title.blue { color:var(--accent2); } .card-title.blue::before { background:var(--accent2); }
+.card-title.purple { color:var(--purple); } .card-title.purple::before { background:var(--purple); }
+.card-title.orange { color:var(--accent3); } .card-title.orange::before { background:var(--accent3); }
+
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:13px; }
+.grid-4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:13px; }
+@media(max-width:600px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+@media(min-width:601px) and (max-width:900px){.grid-3{grid-template-columns:1fr 1fr} .grid-4{grid-template-columns:1fr 1fr}}
+
+/* FORMS */
+.field { display:flex; flex-direction:column; gap:5px; }
+label { font-size:0.82rem; font-weight:600; color:var(--text-dim); }
+input, select { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Heebo',sans-serif; font-size:16px; padding:10px 12px; outline:none; transition:border-color 0.2s; direction:ltr; text-align:right; width:100%; -webkit-appearance:none; touch-action:manipulation; }
+input:focus, select:focus { border-color:var(--accent); }
+select { direction:rtl; }
+
+/* ── RANGE SLIDER ── */
+.range-wrap { display:flex; flex-direction:column; gap:3px; }
+.range-row { display:flex; align-items:center; gap:8px; height:20px; }
+.range-row input[type="range"] { flex:1; touch-action:pan-y; }
+.range-val { font-family:'Space Mono',monospace; font-size:0.78rem; font-weight:700; color:var(--accent); background:rgba(0,212,170,0.1); border-radius:5px; padding:1px 6px; min-width:36px; text-align:center; }
+
+input[type="range"] {
+  -webkit-appearance:none; appearance:none;
+  height:5px; border-radius:3px; cursor:pointer;
+  background:var(--slider-track);
+  padding:0; border:none; outline:none; width:100%;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height:5px; border-radius:3px; background:transparent;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none;
+  width:17px; height:17px; border-radius:50%;
+  background:var(--accent); border:2px solid var(--bg);
+  cursor:pointer; margin-top:-6px;
+  box-shadow:0 0 0 2px rgba(0,212,170,0.25);
+  transition:box-shadow 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:active { box-shadow:0 0 0 4px rgba(0,212,170,0.3); }
+input[type="range"]::-moz-range-track { height:5px; border-radius:3px; background:var(--slider-track); }
+input[type="range"]::-moz-range-progress { height:5px; border-radius:3px; background:var(--accent); }
+input[type="range"]::-moz-range-thumb { width:17px; height:17px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); cursor:pointer; }
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+
+/* DURATION TOGGLE */
+.duration-field { display:flex; flex-direction:column; gap:5px; }
+.duration-input-wrap { display:flex; gap:6px; }
+.duration-input-wrap input { flex:1; min-width:0; }
+.duration-unit-btn { padding:10px 10px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-family:'Heebo',sans-serif; font-size:0.78rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:all 0.18s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+.duration-unit-btn.active { background:var(--accent); color:#000; border-color:var(--accent); }
+
+/* BUTTONS */
+.btn { padding:11px 22px; border-radius:8px; border:none; font-family:'Heebo',sans-serif; font-size:0.92rem; font-weight:700; cursor:pointer; transition:filter 0.15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+.btn-primary { background:var(--accent); color:#000; }
+.btn-primary:hover { filter:brightness(1.08); }
+.btn-primary:active { filter:brightness(0.9); transform:scale(0.97); }
+.btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
+.btn-secondary:active { filter:brightness(0.9); }
+.btn-blue { background:var(--accent2); color:#fff; }
+.btn-blue:hover { filter:brightness(1.1); }
+.btn-blue:active { filter:brightness(0.9); transform:scale(0.97); }
+
+/* RESULTS */
+.result-box { background:linear-gradient(135deg,rgba(0,212,170,0.08),rgba(59,130,246,0.08)); border:1px solid rgba(0,212,170,0.25); border-radius:var(--radius); padding:22px; margin-top:16px; }
+.result-box.blue { background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(168,85,247,0.08)); border-color:rgba(59,130,246,0.25); }
+.result-box.orange { background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(239,68,68,0.08)); border-color:rgba(245,158,11,0.25); }
+.result-box.purple { background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(59,130,246,0.08)); border-color:rgba(168,85,247,0.25); }
+.result-main { font-family:'Space Mono',monospace; font-size:2.2rem; font-weight:700; color:var(--accent); line-height:1.1; margin-bottom:4px; word-break:break-all; }
+.result-label { color:var(--text-muted); font-size:0.82rem; margin-bottom:12px; }
+.result-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:9px; margin-top:12px; }
+.result-stat { background:rgba(255,255,255,0.04); border-radius:8px; padding:10px 12px; }
+body.light .result-stat { background:rgba(0,0,0,0.04); }
+.result-stat .val { font-family:'Space Mono',monospace; font-size:1rem; font-weight:700; color:var(--text); margin-bottom:3px; word-break:break-all; }
+.result-stat .lbl { font-size:0.73rem; color:var(--text-muted); }
+
+.chart-wrap { position:relative; height:240px; margin-top:8px; }
+.divider { border:none; border-top:1px solid var(--border); margin:16px 0; }
+.positive { color:var(--accent)!important; } .negative { color:var(--danger)!important; } .neutral { color:var(--accent3)!important; }
+
+.timeline-bar { display:flex; height:10px; border-radius:5px; overflow:hidden; margin-top:6px; }
+.bar-legend { display:flex; gap:14px; margin-top:6px; font-size:0.77rem; color:var(--text-muted); flex-wrap:wrap; }
+.bar-legend span { display:flex; align-items:center; gap:5px; }
+.dot { width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }
+
+.chips { display:flex; flex-wrap:wrap; gap:7px; margin-top:7px; }
+.chip { padding:8px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.2s; color:var(--text-dim); -webkit-tap-highlight-color:transparent; touch-action:manipulation; min-height:38px; display:inline-flex; align-items:center; }
+.chip:active,.chip.selected { border-color:var(--accent); color:var(--accent); background:rgba(0,212,170,0.08); }
+
+.loading { display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:0.88rem; padding:14px 0; }
+.spinner { width:17px; height:17px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.note { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:11px 14px; font-size:0.8rem; color:var(--accent3); margin-top:10px; line-height:1.6; }
+.note-blue { background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:11px 14px; font-size:0.8rem; color:#93c5fd; margin-bottom:14px; }
+
+/* DATE PICKER */
+.date-picker-wrap { position:relative; }
+.date-display { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Heebo',sans-serif; font-size:0.92rem; padding:10px 12px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; transition:border-color 0.2s; user-select:none; touch-action:manipulation; }
+.date-display:hover,.date-display.open { border-color:var(--accent); }
+.date-display svg { color:var(--text-muted); transition:transform 0.2s; flex-shrink:0; }
+.date-display.open svg { transform:rotate(180deg); color:var(--accent); }
+.date-dropdown { display:none; position:absolute; top:calc(100% + 5px); right:0; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; z-index:200; box-shadow:0 8px 32px rgba(0,0,0,0.5); min-width:240px; max-width:92vw; }
+.date-dropdown.open { display:block; }
+.date-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.date-nav-btn { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:1.2rem; width:34px; height:34px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; touch-action:manipulation; }
+.date-nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+.date-nav-year { font-family:'Space Mono',monospace; font-weight:700; font-size:0.95rem; color:var(--accent); }
+.date-months { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+.month-btn { padding:9px 3px; background:var(--surface2); border:1px solid transparent; border-radius:6px; color:var(--text-dim); font-family:'Heebo',sans-serif; font-size:0.78rem; font-weight:600; cursor:pointer; text-align:center; transition:all 0.15s; touch-action:manipulation; }
+.month-btn:active,.month-btn:hover { border-color:var(--accent); color:var(--accent); }
+.month-btn.selected { background:var(--accent); color:#000; border-color:var(--accent); }
+.month-btn.disabled { opacity:0.3; pointer-events:none; }
+
+/* INSET */
+.inset-card { background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.15); border-radius:10px; padding:16px; margin-top:14px; }
+.inset-title { font-size:0.86rem; font-weight:700; color:var(--accent3); margin-bottom:12px; }
+
+/* SCENARIO */
+.scenario-col { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:16px; }
+.scenario-col.a { border-top:3px solid var(--accent); }
+.scenario-col.b { border-top:3px solid var(--accent2); }
+.scenario-label { font-size:0.8rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
+.scenario-label.a { color:var(--accent); } .scenario-label.b { color:var(--accent2); }
+
+/* TABLE */
+table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+th { padding:9px 10px; text-align:right; color:var(--text-muted); border-bottom:1px solid var(--border); font-weight:600; white-space:nowrap; }
+td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.04); }
+body.light td { border-bottom:1px solid rgba(0,0,0,0.05); }
+tr:hover td { background:rgba(255,255,255,0.02); }
+body.light tr:hover td { background:rgba(0,0,0,0.02); }
+.tbl-mono { font-family:'Space Mono',monospace; font-size:0.79rem; }
+
+/* HOME PAGE */
+.home-hero { text-align:center; padding:40px 16px 28px; }
+.home-hero h1 { font-size:2.8rem; font-weight:900; color:var(--text); margin-bottom:8px; }
+.home-hero h1 span { color:var(--accent); }
+.home-hero p { color:var(--text-muted); font-size:1rem; max-width:520px; margin:0 auto 28px; line-height:1.7; }
+.features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-bottom:28px; }
+.feature-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; cursor:pointer; transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s; text-align:right; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+@media(hover:hover){ .feature-card:hover { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 8px 28px rgba(0,212,170,0.1); } }
+.feature-card:active { border-color:var(--accent); transform:scale(0.98); }
+.feature-icon { font-size:1.9rem; margin-bottom:10px; display:inline-block; }
+.feature-title { font-size:1rem; font-weight:800; color:var(--text); margin-bottom:5px; }
+.feature-desc { font-size:0.82rem; color:var(--text-muted); line-height:1.6; }
+.feature-tag { display:inline-block; margin-top:9px; padding:3px 10px; border-radius:20px; font-size:0.73rem; font-weight:700; }
+.tag-green { background:rgba(0,212,170,0.12); color:var(--accent); }
+.tag-blue { background:rgba(59,130,246,0.12); color:var(--accent2); }
+.tag-purple { background:rgba(168,85,247,0.12); color:var(--purple); }
+.tag-orange { background:rgba(245,158,11,0.12); color:var(--accent3); }
+
+/* LANG SELECTOR */
+
+/* INFO BOXES */
+.info-box { background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.18); border-radius:10px; padding:14px 16px; margin-bottom:14px; }
+.info-box-title { font-size:0.88rem; font-weight:700; color:var(--accent2); margin-bottom:8px; display:flex; align-items:center; gap:7px; }
+.info-box p { font-size:0.82rem; color:var(--text-dim); line-height:1.7; margin-bottom:5px; }
+.info-box p:last-child { margin-bottom:0; }
+.benchmark-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(138px,1fr)); gap:7px; margin-top:9px; }
+.benchmark-item { background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 11px; display:flex; flex-direction:column; gap:3px; }
+body.light .benchmark-item { background:rgba(0,0,0,0.03); }
+.benchmark-item .b-name { font-size:0.73rem; color:var(--text-muted); }
+.benchmark-item .b-val { font-family:'Space Mono',monospace; font-size:0.92rem; font-weight:700; color:var(--accent); }
+.benchmark-item .b-period { font-size:0.68rem; color:var(--text-muted); }
+
+/* RULE-300 BOX */
+.rule-box { background:rgba(168,85,247,0.06); border:1px solid rgba(168,85,247,0.2); border-radius:10px; padding:16px; margin-top:14px; }
+.rule-box-title { font-size:0.86rem; font-weight:700; color:var(--purple); margin-bottom:10px; }
+
+/* LTR */
+body.ltr { direction:ltr; }
+body.ltr input[type="text"], body.ltr input[type="number"] { text-align:left; }
+body.ltr select { text-align:left; }
+body.ltr th { text-align:left; }
+body.ltr .feature-card { text-align:left; }
+
+/* ── MOBILE NAV BAR (separate row below header) ── */
+#mobileNav {
+  display:none;
+}
+@media(max-width:700px){
+  #mobileNav { display:flex; }
+}
+@media(max-width:700px) {
+  #mainNav { display:none !important; }
+  #mobileNav {
+    display:flex;
+    position:sticky;
+    top:49px;
+    z-index:99;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    padding:6px 8px;
+    gap:4px;
+  }
+  #mobileNav::-webkit-scrollbar { display:none; }
+  #mobileNav .nav-tab {
+    padding:8px 10px;
+    font-size:0.8rem;
+    white-space:nowrap;
+    flex-shrink:0;
+    border-radius:8px;
+    border:none;
+    background:transparent;
+    color:var(--text-muted);
+    font-family:'Heebo',sans-serif;
+    font-weight:600;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    min-height:38px;
+    display:flex;
+    align-items:center;
+  }
+  #mobileNav .nav-tab.active { background:var(--accent); color:#000; font-weight:700; }
+  body.light #mobileNav { background:#fff; border-bottom-color:#cbd5e1; }
+  header { padding:8px 12px; }
+  .header-right { gap:6px; }
+  main { padding:12px 10px; }
+  .module-title { font-size:1.25rem; }
+  .module-subtitle { font-size:0.84rem; margin-bottom:16px; }
+  .home-hero { padding:20px 8px 14px; }
+  .home-hero h1 { font-size:1.85rem; }
+  .result-main { font-size:1.5rem; }
+  .chart-wrap { height:180px; }
+  .card { padding:12px; margin-bottom:12px; }
+  .result-box { padding:14px; }
+  .btn { width:100%; text-align:center; }
+  .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr !important; }
+  .benchmark-grid { grid-template-columns:repeat(2,1fr) !important; }
+  .result-grid { grid-template-columns:repeat(2,1fr); }
+  .inset-card { padding:12px; }
+  .info-box { padding:11px 12px; }
+  .scenario-col { padding:12px; }
+  th,td { padding:6px 8px; font-size:0.79rem; }
+}
+
+/* ── MOBILE TOUCH OPTIMIZATIONS ── */
+* { -webkit-tap-highlight-color: transparent; }
+button, [onclick], .cur-label, .chip, .feature-card, .nav-tab, .duration-unit-btn, .lang-btn, .theme-btn, .logo {
+  touch-action: manipulation;
+  cursor: pointer;
+}
+/* Bigger tap targets on mobile */
+@media(max-width:700px) {
+  button, .btn, .nav-tab { min-height: 44px; }
+  .duration-unit-btn { min-height: 40px; min-width: 60px; font-size: 0.9rem; }
+  input[type="range"] { height: 2px; cursor: pointer; }
+  .range-row { height: 28px; } /* tall tap area on mobile without visual bulk */
+  .chip { min-height: 40px; padding: 8px 14px; }
+  .cur-label { padding: 8px; font-size: 1rem; }
+  .toggle-track { width: 48px; height: 26px; }
+  .toggle-thumb { width: 20px; height: 20px; top: 3px; right: 3px; }
+  .toggle-track.usd .toggle-thumb { left: 3px; right: auto; }
+}
+
+/* ── FORMULA BOXES ── */
+.formula-box {
+  margin-top: 28px;
+  background: rgba(0,212,170,0.04);
+  border: 1px solid rgba(0,212,170,0.15);
+  border-radius: 14px;
+  padding: 22px 24px;
+}
+.formula-box-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.formula-section { margin-bottom: 18px; }
+.formula-section:last-child { margin-bottom: 0; }
+.formula-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.formula-eq {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.82rem;
+  background: rgba(0,0,0,0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--accent2);
+  direction: ltr;
+  text-align: left;
+  line-height: 1.8;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.formula-vars {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  direction: rtl;
+}
+.formula-vars span {
+  display: inline-block;
+  margin-left: 14px;
+}
+body.light .formula-box {
+  background: rgba(0,120,100,0.04);
+  border-color: rgba(0,120,100,0.18);
+}
+body.light .formula-eq {
+  background: #f1f5f9;
+  color: #1d4ed8;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <div class="logo" onclick="goHome()">כלי <span>חישוב</span></div>
+    <div class="currency-toggle">
+      <span class="cur-label active-cur" id="cur-label-ils" onclick="toggleCurrency()">₪</span>
+      <div class="toggle-track" id="toggle-track" onclick="toggleCurrency()">
+        <div class="toggle-thumb" id="toggle-thumb"></div>
+      </div>
+      <span class="cur-label inactive-cur" id="cur-label-usd" onclick="toggleCurrency()">$</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙 <span id="theme-label">לילה</span></button>
+    <nav id="mainNav">
+      <button class="nav-tab active" data-module="home">🏠 בית</button>
+      <button class="nav-tab" data-module="compound">📈 ריבית דריבית</button>
+      <button class="nav-tab" data-module="history">📊 היסטוריה</button>
+      <button class="nav-tab" data-module="retirement">🏖️ פרישה</button>
+      <button class="nav-tab" data-module="compare">⚡ השוואה</button>
+      <button class="nav-tab" data-module="loan">🏠 הלוואות</button>
+    </nav>
+  </div>
+</header>
+
+<!-- MOBILE NAV BAR — shown below header on small screens, no scroll container blocking touches -->
+<div id="mobileNav">
+  <button class="nav-tab active" data-module="home">🏠 בית</button>
+  <button class="nav-tab" data-module="compound">📈 ריבית דריבית</button>
+  <button class="nav-tab" data-module="history">📊 היסטוריה</button>
+  <button class="nav-tab" data-module="retirement">🏖️ פרישה</button>
+  <button class="nav-tab" data-module="compare">⚡ השוואה</button>
+  <button class="nav-tab" data-module="loan">🏠 הלוואות</button>
+</div>
+
+<main>
+
+<!-- ============================================================ -->
+<!-- HOME PAGE                                                     -->
+<!-- ============================================================ -->
+<div class="module active" id="module-home">
+  <div class="home-hero">
+    <h1>כלי <span>חישוב</span></h1>
+    <p id="home-tagline">כלי ניהול פיננסי חינמי ומקיף — חשב, השווה, ותכנן את העתיד הפיננסי שלך בצורה חכמה</p>
+  </div>
+
+  <!-- LANGUAGE SELECTOR -->
+
+  <div class="features-grid">
+    <div class="feature-card" onclick="goTo('compound')">
+      <div class="feature-icon">📈</div>
+      <div class="feature-title" id="f1t">ריבית דריבית + אינפלציה</div>
+      <div class="feature-desc" id="f1d">חשב כיצד ההשקעה שלך צומחת לאורך זמן עם הפקדות חודשיות. ראה את ההשפעה האמיתית של אינפלציה על הערך הריאלי של הכסף שלך.</div>
+      <span class="feature-tag tag-green" id="f1g">חיסכון והשקעה</span>
+    </div>
+    <div class="feature-card" onclick="goTo('history')">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title" id="f2t">השוואה לנתוני עבר</div>
+      <div class="feature-desc" id="f2d">כמה כסף היה לך אילו השקעת ב-Apple, S&P 500, או כל מניה אחרת? מחשב תשואה היסטורית אמיתית מ-Yahoo Finance.</div>
+      <span class="feature-tag tag-blue" id="f2g">נתונים אמיתיים</span>
+    </div>
+    <div class="feature-card" onclick="goTo('retirement')">
+      <div class="feature-icon">🏖️</div>
+      <div class="feature-title" id="f3t">מחשבון פרישה</div>
+      <div class="feature-desc" id="f3d">תכנן את הפרישה שלך עם כלל ה-4%. כמה צריך לחסוך כל חודש? גרף חיסכון לפני הפרישה וגרף הוצאות לאחריה.</div>
+      <span class="feature-tag tag-orange" id="f3g">תכנון עתיד</span>
+    </div>
+    <div class="feature-card" onclick="goTo('compare')">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title" id="f4t">השוואת תרחישים</div>
+      <div class="feature-desc" id="f4d">הצב שני תרחישי השקעה זה לצד זה — שנה הפקדה, תשואה, או אופק זמן, וראה מה ההבדל האמיתי.</div>
+      <span class="feature-tag tag-green" id="f4g">ניתוח והשוואה</span>
+    </div>
+    <div class="feature-card" onclick="goTo('loan')">
+      <div class="feature-icon">🏠</div>
+      <div class="feature-title" id="f5t">מחשבון הלוואה ומשכנתא</div>
+      <div class="feature-desc" id="f5d">חשב החזר חודשי, כמה ריבית תשלם בסך הכל, ויתרת קרן לאורך הזמן. לוח סילוקין מפורט.</div>
+      <span class="feature-tag tag-purple" id="f5g">הלוואות ומשכנתא</span>
+    </div>
+  </div>
+
+  <!-- INFO: Average Returns -->
+  <div class="info-box">
+    <div class="info-box-title">📊 <span id="info-ret-title">תשואות היסטוריות ממוצעות לפי מדדים</span></div>
+    <p id="info-ret-p1">הנתונים הבאים מציגים תשואות שנתיות ממוצעות (CAGR) של מדדים מרכזיים לאורך עשרות שנים. אלו ממוצעים היסטוריים — לא ערובה לעתיד.</p>
+    <div class="benchmark-grid">
+      <div class="benchmark-item"><div class="b-name">S&P 500 (SPY)</div><div class="b-val">~10.5%</div><div class="b-period" id="bp1">לשנה | 1957–2024</div></div>
+      <div class="benchmark-item"><div class="b-name">Nasdaq 100 (QQQ)</div><div class="b-val">~14%</div><div class="b-period" id="bp2">לשנה | 1985–2024</div></div>
+      <div class="benchmark-item"><div class="b-name">MSCI World</div><div class="b-val">~9%</div><div class="b-period" id="bp3">לשנה | 1970–2024</div></div>
+      <div class="benchmark-item"><div class="b-name" id="bp4n">אגח ארה"ב (10Y)</div><div class="b-val">~4.5%</div><div class="b-period" id="bp4">לשנה | 1962–2024</div></div>
+      <div class="benchmark-item"><div class="b-name" id="bp5n">ת"א 125 (ישראל)</div><div class="b-val">~8%</div><div class="b-period" id="bp5">לשנה | 2000–2024</div></div>
+      <div class="benchmark-item"><div class="b-name">MSCI Emerging</div><div class="b-val">~7%</div><div class="b-period" id="bp6">לשנה | 1988–2024</div></div>
+    </div>
+    <p style="margin-top:9px" id="info-ret-tip">💡 <strong id="tip-lbl">טיפ:</strong> ברירת המחדל של המחשבון (8%) מבוססת על ממוצע שמרני בין S&P 500 לשוק הגלובלי. מומלץ להשתמש ב-7%–10% לתכנון ריאליסטי.</p>
+  </div>
+
+  <!-- INFO: Inflation -->
+  <div class="info-box">
+    <div class="info-box-title">💸 <span id="info-infl-title">מהי אינפלציה ממוצעת?</span></div>
+    <p id="info-infl-p1">אינפלציה היא עליית המחירים הכללית לאורך זמן — כל שנה הכסף שלך קונה פחות. אינפלציה של 3% = מה שעלה 100 ₪ השנה יעלה 103 ₪ בשנה הבאה.</p>
+    <div class="benchmark-grid">
+      <div class="benchmark-item"><div class="b-name" id="bi1n">ארה"ב (CPI)</div><div class="b-val">~3.1%</div><div class="b-period" id="bi1p">ממוצע | 1913–2024</div></div>
+      <div class="benchmark-item"><div class="b-name" id="bi2n">ישראל</div><div class="b-val">~2.8%</div><div class="b-period" id="bi2p">ממוצע | 2000–2024</div></div>
+      <div class="benchmark-item"><div class="b-name" id="bi3n">אירופה (HICP)</div><div class="b-val">~2.3%</div><div class="b-period" id="bi3p">ממוצע | 1997–2024</div></div>
+      <div class="benchmark-item"><div class="b-name" id="bi4n">יעד בנקים מרכזיים</div><div class="b-val">2%</div><div class="b-period" id="bi4p">יעד רשמי</div></div>
+    </div>
+    <p style="margin-top:9px" id="info-infl-warn">⚠️ בישראל, אינפלציה של 2022–2023 הגיעה ל-5%. לתכנון פנסיוני שמרני מומלץ להשתמש ב-3%. <strong>תשואה ריאלית = תשואה נומינלית פחות אינפלציה.</strong></p>
+  </div>
+
+  <div class="note" style="text-align:center" id="home-disc">
+    ⚠️ כלי חישוב להשקעות הוא כלי לימודי בלבד. אין בתכנים אלו משום ייעוץ השקעות, פיננסי, או פנסיוני. כל ההחלטות הפיננסיות צריכות להתקבל בהתייעצות עם איש מקצוע מוסמך.
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODULE 1: COMPOUND INTEREST                                   -->
+<!-- ============================================================ -->
+<div class="module" id="module-compound">
+  <div class="module-title" id="t-m1-title">מחשבון ריבית דריבית</div>
+  <div class="module-subtitle" id="t-m1-sub">חשב צמיחת השקעה לאורך זמן — כולל ערך ריאלי לאחר אינפלציה</div>
+
+  <div class="card">
+    <div class="card-title" id="t-m1-params">פרמטרי ההשקעה</div>
+    <div class="grid-3" style="margin-bottom:16px">
+      <div class="field"><label id="t-ci-init">סכום התחלתי (<span class="cur-sym">₪</span>)</label><input type="number" id="ci-initial" value="10000" min="0" step="100"></div>
+      <div class="field"><label id="t-ci-monthly">הפקדה חודשית (<span class="cur-sym">₪</span>)</label><input type="number" id="ci-monthly" value="500" min="0" step="50"></div>
+      <div class="duration-field">
+        <label id="t-ci-dur">משך ההשקעה</label>
+        <div class="duration-input-wrap">
+          <input type="number" id="ci-duration" value="20" min="1">
+          <button class="duration-unit-btn active" id="ci-unit-y" onclick="setUnit('ci','y')">שנים</button>
+          <button class="duration-unit-btn" id="ci-unit-m" onclick="setUnit('ci','m')">חודשים</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="range-wrap"><label>תשואה שנתית</label>
+        <div class="range-row"><input type="range" id="ci-rate" min="1" max="30" value="8" step="0.5" oninput="document.getElementById('ci-rate-val').textContent=this.value+'%'"><div class="range-val" id="ci-rate-val">8%</div></div>
+      </div>
+      <div class="range-wrap"><label>אינפלציה שנתית</label>
+        <div class="range-row"><input type="range" id="ci-inflation" min="0" max="15" value="3" step="0.5" oninput="document.getElementById('ci-infl-val').textContent=this.value+'%'"><div class="range-val" id="ci-infl-val">3%</div></div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="calcCompound()">חשב</button>
+      <button class="btn btn-secondary" onclick="resetCompound()">איפוס</button>
+    </div>
+  </div>
+
+  <div id="ci-result" style="display:none">
+    <div class="result-box">
+      <div class="result-main" id="ci-total-val">₪0</div>
+      <div class="result-label">שווי נומינלי לאחר <span id="ci-dur-label"></span></div>
+      <div class="result-grid">
+        <div class="result-stat"><div class="val" id="ci-invested-val">₪0</div><div class="lbl">סך הפקדות</div></div>
+        <div class="result-stat"><div class="val positive" id="ci-profit-val">₪0</div><div class="lbl">רווח ריבית</div></div>
+        <div class="result-stat"><div class="val" id="ci-multiple-val">0x</div><div class="lbl">כפילות הכסף</div></div>
+        <div class="result-stat"><div class="val positive" id="ci-roi-val">0%</div><div class="lbl">תשואה כוללת</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:5px">פירוט הכסף שלך</div>
+        <div class="timeline-bar" id="ci-bar"></div>
+        <div class="bar-legend">
+          <span><i class="dot" style="background:var(--accent2)"></i><span>הפקדות</span></span>
+          <span><i class="dot" style="background:var(--accent)"></i><span>רווח ריבית</span></span>
+        </div>
+      </div>
+      <div class="inset-card">
+        <div class="inset-title">🏷️ ערך ריאלי (לאחר אינפלציה)</div>
+        <div class="result-grid">
+          <div class="result-stat"><div class="val neutral" id="ci-real-val">₪0</div><div class="lbl">שווי ריאלי</div></div>
+          <div class="result-stat"><div class="val" id="ci-infl-loss">₪0</div><div class="lbl">נשחק מאינפלציה</div></div>
+          <div class="result-stat"><div class="val" id="ci-real-ret">0%</div><div class="lbl">תשואה ריאלית</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">גרף צמיחה — נומינלי מול ריאלי</div><div class="chart-wrap"><canvas id="ci-chart"></canvas></div></div>
+    <div class="card"><div class="card-title">טבלת צמיחה שנתית</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table id="ci-table"></table></div></div>
+  </div>
+
+  <!-- INFLATION CALC -->
+  <div class="card">
+    <div class="card-title orange">🧮 מחשבון אינפלציה — כוח קנייה עתידי</div>
+    <div class="grid-3" style="margin-bottom:14px">
+      <div class="field"><label>סכום (<span class="cur-sym">₪</span>)</label><input type="number" id="inf-amount" value="100000" min="0" step="1000"></div>
+      <div class="field"><label>שנה עתידית</label><input type="number" id="inf-year" value="2045" min="2025" max="2100"></div>
+      <div class="range-wrap"><label>אינפלציה שנתית</label>
+        <div class="range-row"><input type="range" id="inf-rate" min="0" max="15" value="3" step="0.5" oninput="document.getElementById('inf-rate-val').textContent=this.value+'%'"><div class="range-val" id="inf-rate-val">3%</div></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="calcInflation()" style="background:var(--accent3);margin-bottom:14px">חשב</button>
+    <div id="inf-result" style="display:none">
+      <div class="result-grid">
+        <div class="result-stat"><div class="val" id="inf-nominal">₪0</div><div class="lbl">סכום נומינלי</div></div>
+        <div class="result-stat"><div class="val neutral" id="inf-real">₪0</div><div class="lbl">שווי ריאלי היום</div></div>
+        <div class="result-stat"><div class="val negative" id="inf-lost">₪0</div><div class="lbl">כוח קנייה שנשחק</div></div>
+        <div class="result-stat"><div class="val" id="inf-needed">₪0</div><div class="lbl">כמה צריך בעתיד = <span class="cur-sym2">₪</span>100K היום</div></div>
+      </div>
+    </div>
+  </div>
+
+<div class="formula-box">
+  <div class="formula-box-title">📐 נוסחאות החישוב — ריבית דריבית</div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">צמיחת יתרה — חישוב חודשי (גישה המדויקת ביותר)</div>
+    <div class="formula-eq">
+B₀ = P
+Bₘ = Bₘ₋₁ × (1 + r/12) + M
+
+FV = P × (1 + r/12)ⁿ + M × [(1 + r/12)ⁿ − 1] / (r/12)
+    </div>
+    <div class="formula-vars">
+      <span><b>P</b> = סכום התחלתי</span>
+      <span><b>M</b> = הפקדה חודשית</span>
+      <span><b>r</b> = ריבית שנתית (עשרוני)</span>
+      <span><b>n</b> = מספר חודשים</span>
+      <span><b>FV</b> = שווי סופי נומינלי</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">שווי ריאלי — נטרול אינפלציה (Fisher deflation)</div>
+    <div class="formula-eq">
+RV = FV / (1 + i)ʸ
+    </div>
+    <div class="formula-vars">
+      <span><b>RV</b> = ערך ריאלי (במחירי היום)</span>
+      <span><b>i</b> = אינפלציה שנתית (עשרוני)</span>
+      <span><b>y</b> = מספר שנים</span>
+      <span>⚡ שיטה זו מדויקת יותר מ- r − i (קירוב בלבד)</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">מחשבון כוח קנייה עתידי</div>
+    <div class="formula-eq">
+PV_real = Amount / (1 + i)ʸ
+Required_future = Amount × (1 + i)ʸ
+    </div>
+    <div class="formula-vars">
+      <span><b>y</b> = שנת עתיד − שנה נוכחית</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- MODULE 2: HISTORICAL                                         -->
+<!-- ============================================================ -->
+<div class="module" id="module-history">
+  <div class="module-title" id="t-m2-title">השוואה לנתוני עבר</div>
+  <div class="module-subtitle" id="t-m2-sub">כמה היה שווה ההשקעה שלך לו היית משקיע בעבר?</div>
+  <div class="note-blue">💡 הכלי מושך נתונים אמיתיים מ-Yahoo Finance. נדרש חיבור לאינטרנט. הנתונים בדולר אמריקאי.</div>
+  <div class="card">
+    <div class="card-title">בחר נייר ערך</div>
+    <div class="field" style="margin-bottom:12px"><label>סמל (Ticker)</label><input type="text" id="hist-ticker" value="SPY" placeholder="SPY, AAPL, QQQ..." style="text-transform:uppercase"></div>
+    <div style="margin-bottom:18px"><label style="font-size:0.8rem">ניירות פופולריים:</label>
+      <div class="chips">
+        <span class="chip selected" onclick="selectTicker('SPY',this)">SPY — S&P 500</span>
+        <span class="chip" onclick="selectTicker('QQQ',this)">QQQ — נאסד"ק</span>
+        <span class="chip" onclick="selectTicker('DIA',this)">DIA — דאו ג'ונס</span>
+        <span class="chip" onclick="selectTicker('AAPL',this)">AAPL — Apple</span>
+        <span class="chip" onclick="selectTicker('MSFT',this)">MSFT — Microsoft</span>
+        <span class="chip" onclick="selectTicker('NVDA',this)">NVDA — Nvidia</span>
+        <span class="chip" onclick="selectTicker('AMZN',this)">AMZN — Amazon</span>
+        <span class="chip" onclick="selectTicker('TSLA',this)">TSLA — Tesla</span>
+        <span class="chip" onclick="selectTicker('VTI',this)">VTI — שוק מלא</span>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="grid-3" style="margin-bottom:18px">
+      <div class="field">
+        <label>תאריך השקעה ראשוני</label>
+        <div class="date-picker-wrap" id="date-picker-wrap">
+          <div class="date-display" id="date-display" onclick="toggleDatePicker()">
+            <span id="date-display-text">ינואר 2010</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="date-dropdown" id="date-dropdown">
+            <div class="date-nav">
+              <button class="date-nav-btn" onclick="changePickerYear(-1)">&#8249;</button>
+              <span class="date-nav-year" id="picker-year">2010</span>
+              <button class="date-nav-btn" onclick="changePickerYear(1)">&#8250;</button>
+            </div>
+            <div class="date-months" id="date-months"></div>
+          </div>
+        </div>
+        <input type="hidden" id="hist-startdate" value="2010-01-01">
+      </div>
+      <div class="field"><label>סכום ראשוני ($)</label><input type="number" id="hist-initial" value="10000" min="0" step="500"></div>
+      <div class="field"><label>הפקדה חודשית ($)</label><input type="number" id="hist-monthly" value="200" min="0" step="50"></div>
+    </div>
+    <button class="btn btn-primary" onclick="calcHistorical()">חשב תשואה היסטורית</button>
+  </div>
+  <div id="hist-loading" style="display:none"><div class="card"><div class="loading"><div class="spinner"></div>טוען נתונים...</div></div></div>
+  <div id="hist-result" style="display:none">
+    <div class="result-box">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px">
+        <div><div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:3px">שווי תיק עכשיו</div>
+          <div class="result-main" id="hist-total-val">$0</div>
+          <div class="result-label" id="hist-period-label"></div>
+        </div>
+        <div><div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:3px">תשואה כוללת</div>
+          <div class="result-main positive" id="hist-return-val">+0%</div>
+        </div>
+      </div>
+      <div class="result-grid" style="margin-top:14px">
+        <div class="result-stat"><div class="val" id="hist-invested-val">$0</div><div class="lbl">סך הפקדות</div></div>
+        <div class="result-stat"><div class="val positive" id="hist-profit-val">$0</div><div class="lbl">רווח</div></div>
+        <div class="result-stat"><div class="val" id="hist-cagr-val">0%</div><div class="lbl">CAGR שנתי</div></div>
+        <div class="result-stat"><div class="val" id="hist-multiple-val">0x</div><div class="lbl">כפילות הכסף</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">גרף שווי תיק</div><div class="chart-wrap"><canvas id="hist-chart"></canvas></div></div>
+    <div class="note">⚠️ ביצועי עבר אינם מבטיחים ביצועי עתיד. אין בכלי זה משום ייעוץ השקעות.</div>
+  </div>
+  <div id="hist-error" style="display:none" class="note"></div>
+
+<div class="formula-box">
+  <div class="formula-box-title">📐 נוסחאות החישוב — השוואה היסטורית</div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">ערך תיק עם הפקדות חודשיות (נתוני מחיר אמיתיים)</div>
+    <div class="formula-eq">
+Units_bought_each_month = M / Price_that_month
+Total_units = Σ Units_bought
+Portfolio_value = Total_units × Current_price
+    </div>
+    <div class="formula-vars">
+      <span>הנתונים נמשכים מ-Yahoo Finance (מחירי סגירה מתוקנים לדיבידנד)</span>
+      <span><b>M</b> = הפקדה חודשית קבועה בדולר</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">CAGR — תשואה שנתית מורכבת</div>
+    <div class="formula-eq">
+CAGR = (FV / Invested)^(1/y) − 1
+    </div>
+    <div class="formula-vars">
+      <span><b>FV</b> = שווי תיק סופי</span>
+      <span><b>Invested</b> = סך הפקדות</span>
+      <span><b>y</b> = מספר שנות ההשקעה</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">תשואה כוללת</div>
+    <div class="formula-eq">
+Total_return = (FV − Invested) / Invested × 100%
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- MODULE 3: RETIREMENT                                         -->
+<!-- ============================================================ -->
+<div class="module" id="module-retirement">
+  <div class="module-title" id="t-m3-title">מחשבון פרישה</div>
+  <div class="module-subtitle" id="t-m3-sub">תכנן את הפרישה שלך — כמה לחסוך, מתי להפסיק, וכמה זמן הכסף יחזיק</div>
+
+  <div class="card">
+    <div class="card-title blue">פרטים אישיים</div>
+    <div class="grid-4" style="margin-bottom:16px">
+      <div class="field"><label>גיל נוכחי</label><input type="number" id="ret-age-now" value="30" min="18" max="80"></div>
+      <div class="field"><label>גיל פרישה מבוקש</label><input type="number" id="ret-age-retire" value="60" min="30" max="90"></div>
+      <div class="field"><label>חיסכון קיים (<span class="cur-sym">₪</span>)</label><input type="number" id="ret-savings" value="50000" min="0" step="1000"></div>
+      <div class="field"><label>הוצאות חודשיות בפרישה (<span class="cur-sym">₪</span>)</label><input type="number" id="ret-expenses" value="5000" min="0" step="100"></div>
+    </div>
+    <div class="grid-3" style="margin-bottom:16px">
+      <div class="range-wrap"><label>תשואה שנתית בשלב חיסכון</label>
+        <div class="range-row"><input type="range" id="ret-growth" min="1" max="20" value="7" step="0.5" oninput="document.getElementById('ret-growth-val').textContent=this.value+'%'"><div class="range-val" id="ret-growth-val">7%</div></div>
+      </div>
+      <div class="range-wrap"><label>תשואה שנתית בשלב פרישה</label>
+        <div class="range-row"><input type="range" id="ret-retire-rate" min="1" max="12" value="4" step="0.5" oninput="document.getElementById('ret-rrate-val').textContent=this.value+'%'"><div class="range-val" id="ret-rrate-val">4%</div></div>
+      </div>
+      <div class="range-wrap"><label>אינפלציה שנתית</label>
+        <div class="range-row"><input type="range" id="ret-inflation" min="0" max="10" value="3" step="0.5" oninput="document.getElementById('ret-infl-val').textContent=this.value+'%'"><div class="range-val" id="ret-infl-val">3%</div></div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="field"><label>תוחלת חיים משוערת</label><input type="number" id="ret-life" value="85" min="60" max="110"></div>
+      <div class="range-wrap">
+        <label>שיעור משיכה שנתי מהקרן — <span style="color:var(--accent3);font-weight:700" id="ret-wr-label">כלל ה-4%</span></label>
+        <div class="range-row">
+          <input type="range" id="ret-withdraw-rate" min="1" max="10" value="4" step="0.1"
+            oninput="
+              document.getElementById('ret-wr-val').textContent=this.value+'%';
+              document.getElementById('ret-wr-label').textContent=Math.abs(parseFloat(this.value)-4)<0.05?'כלל ה-4%':parseFloat(this.value)<4?'שמרני':'אגרסיבי';
+            ">
+          <div class="range-val" id="ret-wr-val">4%</div>
+        </div>
+      </div>
+    </div>
+    <hr class="divider">
+    <button class="btn btn-blue" onclick="calcRetirement()">חשב תכנית פרישה</button>
+  </div>
+
+  <div id="ret-result" style="display:none">
+    <div class="result-box blue">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px">
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:3px">יעד חיסכון (כלל ה-4%)</div>
+          <div class="result-main" style="color:var(--accent2)" id="ret-target4">₪0</div>
+          <div class="result-label" id="ret-target4-label"></div>
+        </div>
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:3px">הפקדה חודשית נדרשת</div>
+          <div class="result-main" style="color:var(--accent)" id="ret-monthly-needed">₪0</div>
+          <div class="result-label">כדי להגיע ליעד</div>
+        </div>
+      </div>
+      <div class="result-grid" style="margin-top:14px">
+        <div class="result-stat"><div class="val" id="ret-years-save">0</div><div class="lbl">שנות חיסכון</div></div>
+        <div class="result-stat"><div class="val" id="ret-projected">₪0</div><div class="lbl">שווי צפוי בפרישה</div></div>
+        <div class="result-stat"><div class="val" id="ret-monthly-income">₪0</div><div class="lbl">הכנסה חודשית (<span id="ret-wr-stat">4%</span>)</div></div>
+        <div class="result-stat"><div class="val" id="ret-sustainability">∞</div><div class="lbl">שנות קיימות</div></div>
+      </div>
+
+      <!-- 4% RULE EXPLANATION -->
+      <div class="inset-card" style="margin-top:14px">
+        <div class="inset-title">📏 הסבר כלל ה-4%</div>
+        <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7" id="rule4-explain"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-title blue">גרף שלב 1 — צבירת חיסכון עד הפרישה</div>
+      <div class="chart-wrap"><canvas id="ret-chart-save"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title orange">גרף שלב 2 — יתרת תיק לאחר הפרישה</div>
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">
+        🟡 <strong>נומינלי</strong> — כמה כסף בחשבון בפועל &nbsp;|&nbsp; 
+        <span style="color:var(--accent)">🟢 <strong>ריאלי</strong> — הכוח הקנייה במחירי היום לאחר אינפלציה</span>
+      </div>
+      <div class="chart-wrap"><canvas id="ret-chart-spend"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title blue">ניתוח תרחישים</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table id="ret-scenarios-table"></table></div>
+    </div>
+
+    <div class="note">📌 כלל ה-4%: הנחה שמשיכה של 4% שנתי מהתיק מבטיחה קיימות לאורך זמן. כלל ה-300: X הוצאה חודשית × 300 = סכום נדרש. שניהם כלי אצבע ולא ערובה. אין בכלי זה ייעוץ פנסיוני.</div>
+  </div>
+
+<div class="formula-box">
+  <div class="formula-box-title">📐 נוסחאות החישוב — מחשבון פרישה</div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">הוצאות בגיל פרישה (צמוד לאינפלציה)</div>
+    <div class="formula-eq">
+Expenses_retire = Expenses_today × (1 + i)^years_to_retire
+    </div>
+    <div class="formula-vars">
+      <span><b>i</b> = אינפלציה שנתית</span>
+      <span>ההוצאה גדלה עם האינפלציה גם בשלב הפרישה (COLA)</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">יעד חיסכון (כלל אחוז המשיכה)</div>
+    <div class="formula-eq">
+Target = Annual_expenses_at_retire / Withdrawal_rate
+    </div>
+    <div class="formula-vars">
+      <span>כלל ה-4% הקלאסי: Target = הוצאה שנתית × 25</span>
+      <span>מבוסס על מחקר Trinity (1998) — שיעור הצלחה &gt;95% ל-30 שנה</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">הפקדה חודשית נדרשת</div>
+    <div class="formula-eq">
+FV_needed = Target − Savings × (1 + r/12)ⁿ
+Monthly = FV_needed × (r/12) / [(1 + r/12)ⁿ − 1]
+    </div>
+    <div class="formula-vars">
+      <span><b>r</b> = תשואה שנתית בשלב חיסכון</span>
+      <span><b>n</b> = חודשים עד פרישה</span>
+      <span>זוהי נוסחת PMT הפוכה (Present Value Annuity)</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">סימולציית משיכה — קיימות הקרן</div>
+    <div class="formula-eq">
+B₀ = Portfolio_at_retire
+Bₘ = Bₘ₋₁ × (1 + r_retire/12) − Expenses_retire × (1 + i)^floor(m/12)
+    </div>
+    <div class="formula-vars">
+      <span>הסימולציה מריצה חודש-חודש עד שהיתרה מגיעה לאפס</span>
+      <span>הוצאות גדלות עם האינפלציה כל שנה (Cost of Living Adjustment)</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- MODULE 4: SCENARIO COMPARISON                                -->
+<!-- ============================================================ -->
+<div class="module" id="module-compare">
+  <div class="module-title" id="t-m4-title">השוואת תרחישים</div>
+  <div class="module-subtitle" id="t-m4-sub">הצב שני תרחישי השקעה זה לצד זה וראה מה ההבדל האמיתי</div>
+
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="scenario-col a">
+      <div class="scenario-label a">תרחיש א׳</div>
+      <div class="field" style="margin-bottom:10px"><label>סכום התחלתי (<span class="cur-sym">₪</span>)</label><input type="number" id="sc-a-initial" value="10000" step="100"></div>
+      <div class="field" style="margin-bottom:10px"><label>הפקדה חודשית (<span class="cur-sym">₪</span>)</label><input type="number" id="sc-a-monthly" value="1000" step="50"></div>
+      <div class="duration-field" style="margin-bottom:10px">
+        <label>משך</label>
+        <div class="duration-input-wrap">
+          <input type="number" id="sc-a-duration" value="20" min="1">
+          <button class="duration-unit-btn active" id="sc-a-unit-y" onclick="setUnit('sc-a','y')">שנים</button>
+          <button class="duration-unit-btn" id="sc-a-unit-m" onclick="setUnit('sc-a','m')">חודשים</button>
+        </div>
+      </div>
+      <div class="range-wrap"><label>תשואה שנתית</label>
+        <div class="range-row"><input type="range" id="sc-a-rate" min="1" max="25" value="7" step="0.5" oninput="document.getElementById('sc-a-rate-val').textContent=this.value+'%'"><div class="range-val" id="sc-a-rate-val">7%</div></div>
+      </div>
+    </div>
+    <div class="scenario-col b">
+      <div class="scenario-label b">תרחיש ב׳</div>
+      <div class="field" style="margin-bottom:10px"><label>סכום התחלתי (<span class="cur-sym">₪</span>)</label><input type="number" id="sc-b-initial" value="10000" step="100"></div>
+      <div class="field" style="margin-bottom:10px"><label>הפקדה חודשית (<span class="cur-sym">₪</span>)</label><input type="number" id="sc-b-monthly" value="2000" step="50"></div>
+      <div class="duration-field" style="margin-bottom:10px">
+        <label>משך</label>
+        <div class="duration-input-wrap">
+          <input type="number" id="sc-b-duration" value="20" min="1">
+          <button class="duration-unit-btn active" id="sc-b-unit-y" onclick="setUnit('sc-b','y')">שנים</button>
+          <button class="duration-unit-btn" id="sc-b-unit-m" onclick="setUnit('sc-b','m')">חודשים</button>
+        </div>
+      </div>
+      <div class="range-wrap"><label>תשואה שנתית</label>
+        <div class="range-row"><input type="range" id="sc-b-rate" min="1" max="25" value="10" step="0.5" oninput="document.getElementById('sc-b-rate-val').textContent=this.value+'%'"><div class="range-val" id="sc-b-rate-val">10%</div></div>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="calcCompare()" style="margin-bottom:18px">השווה תרחישים</button>
+
+  <div id="sc-result" style="display:none">
+    <div class="result-box">
+      <div class="grid-2">
+        <div>
+          <div style="font-size:0.8rem;color:var(--accent);font-weight:700;margin-bottom:5px">תרחיש א׳</div>
+          <div class="result-main" id="sc-a-total" style="color:var(--accent)">₪0</div>
+          <div class="result-label" id="sc-a-label"></div>
+        </div>
+        <div>
+          <div style="font-size:0.8rem;color:var(--accent2);font-weight:700;margin-bottom:5px">תרחיש ב׳</div>
+          <div class="result-main" id="sc-b-total" style="color:var(--accent2)">₪0</div>
+          <div class="result-label" id="sc-b-label"></div>
+        </div>
+      </div>
+      <div class="result-grid" style="margin-top:14px">
+        <div class="result-stat"><div class="val" id="sc-diff-total">₪0</div><div class="lbl">הפרש סופי</div></div>
+        <div class="result-stat"><div class="val" id="sc-diff-invested">₪0</div><div class="lbl">הפרש הפקדות</div></div>
+        <div class="result-stat"><div class="val" id="sc-winner" style="font-size:0.88rem">—</div><div class="lbl">עדיף</div></div>
+        <div class="result-stat"><div class="val" id="sc-diff-roi">0%</div><div class="lbl">הבדל תשואה</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">גרף השוואה</div><div class="chart-wrap"><canvas id="sc-chart"></canvas></div></div>
+    <div class="card"><div class="card-title">טבלת השוואה שנתית</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table id="sc-table"></table></div></div>
+  </div>
+
+<div class="formula-box">
+  <div class="formula-box-title">📐 נוסחאות החישוב — השוואת תרחישים</div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">שווי סופי כל תרחיש</div>
+    <div class="formula-eq">
+FV = P × (1 + r/12)ⁿ + M × [(1 + r/12)ⁿ − 1] / (r/12)
+    </div>
+    <div class="formula-vars">
+      <span>אותה נוסחת ריבית דריבית, מחושבת לכל תרחיש בנפרד</span>
+      <span><b>P</b> = סכום התחלתי, <b>M</b> = הפקדה חודשית, <b>r</b> = תשואה, <b>n</b> = חודשים</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">ניתוח השוואתי</div>
+    <div class="formula-eq">
+Diff_final     = FV_A − FV_B
+Diff_invested  = (P_A + M_A×n_A) − (P_B + M_B×n_B)
+Return_A       = (FV_A − Invested_A) / Invested_A × 100%
+Return_diff    = Return_A − Return_B
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- MODULE 5: LOAN                                               -->
+<!-- ============================================================ -->
+<div class="module" id="module-loan">
+  <div class="module-title" id="t-m5-title">מחשבון הלוואה ומשכנתא</div>
+  <div class="module-subtitle" id="t-m5-sub">חשב החזרים חודשיים, ריבית כוללת ולוח סילוקין מפורט</div>
+
+  <div class="card">
+    <div class="card-title purple">פרמטרי ההלוואה</div>
+    <div class="grid-4" style="margin-bottom:16px">
+      <div class="field"><label>סכום ההלוואה (<span class="cur-sym">₪</span>)</label><input type="number" id="loan-amount" value="1000000" min="0" step="10000"></div>
+      <div class="duration-field">
+        <label>תקופה</label>
+        <div class="duration-input-wrap">
+          <input type="number" id="loan-duration" value="20" min="1">
+          <button class="duration-unit-btn active" id="loan-unit-y" onclick="setUnit('loan','y')">שנים</button>
+          <button class="duration-unit-btn" id="loan-unit-m" onclick="setUnit('loan','m')">חודשים</button>
+        </div>
+      </div>
+      <div class="field"><label>ריבית שנתית (%)</label><input type="number" id="loan-rate" value="4.5" min="0" max="30" step="0.1"></div>
+      <div class="field"><label>סוג ריבית</label>
+        <select id="loan-type">
+          <option value="fixed">קבועה (שפיצר)</option>
+          <option value="interest-only">ריבית בלבד</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="calcLoan()" style="background:var(--purple)">חשב הלוואה</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       LOAN EXPLAINER BOX
+  ══════════════════════════════════════════════════════════ -->
+  <div class="info-box" style="border-color:rgba(168,85,247,0.25);background:rgba(168,85,247,0.05)">
+    <div class="info-box-title" style="color:var(--purple)">🏦 מדריך: שיטות החזר והבנת הריבית</div>
+
+    <!-- METHOD CARDS -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:14px">
+
+      <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.22);border-radius:10px;padding:14px">
+        <div style="font-size:0.87rem;font-weight:800;color:var(--purple);margin-bottom:7px">📐 שפיצר — ההחזר הקבוע</div>
+        <p style="font-size:0.8rem;color:var(--text-dim);line-height:1.65;margin-bottom:8px">
+          ההחזר החודשי <strong>זהה לאורך כל התקופה</strong>. בשנים הראשונות רוב הכסף הולך לריבית, ועם הזמן יותר ויותר הולך לקרן — עד שבסוף כמעט כולו קרן.
+        </p>
+        <div style="font-size:0.75rem;background:rgba(0,0,0,0.18);border-radius:6px;padding:8px;font-family:'Space Mono',monospace;direction:ltr;text-align:left;margin-bottom:8px">
+          M = P × [r(1+r)ⁿ] / [(1+r)ⁿ−1]<br>
+          <span style="color:var(--text-muted)">M=החזר | P=קרן | r=ריבית/12 | n=חודשים</span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.6">
+          ✅ ודאות — יודע בדיוק כמה לשלם כל חודש<br>
+          ⚠️ בשנה הראשונה ~60–70% מהתשלום הוא ריבית
+        </div>
+      </div>
+
+      <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px">
+        <div style="font-size:0.87rem;font-weight:800;color:var(--danger);margin-bottom:7px">💸 ריבית בלבד (Bullet)</div>
+        <p style="font-size:0.8rem;color:var(--text-dim);line-height:1.65;margin-bottom:8px">
+          משלם רק ריבית מדי חודש. <strong>הקרן אינה יורדת</strong> ומוחזרת בתשלום אחד גדול בסוף התקופה.
+        </p>
+        <div style="font-size:0.75rem;background:rgba(0,0,0,0.18);border-radius:6px;padding:8px;font-family:'Space Mono',monospace;direction:ltr;text-align:left;margin-bottom:8px">
+          M = P × (r/12) per month<br>
+          <span style="color:var(--text-muted)">+ full principal at end</span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.6">
+          ✅ תשלום חודשי נמוך יותר<br>
+          ❌ יקר הרבה יותר בסך הכל — הריבית לא יורדת לעולם
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKED EXAMPLE -->
+    <div style="background:rgba(0,0,0,0.15);border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="font-size:0.83rem;font-weight:700;color:var(--text-dim);margin-bottom:8px">📊 דוגמה מספרית — 1,000,000 ₪ ב-4.5% ל-20 שנה (שפיצר)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.7">
+          <strong style="color:var(--text)">חודש ראשון:</strong><br>
+          ריבית: 1,000,000 × (4.5%÷12) = <strong style="color:var(--danger)">3,750 ₪</strong><br>
+          קרן: <strong style="color:var(--accent)">2,576 ₪</strong> בלבד<br>
+          החזר כולל: ~6,326 ₪
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.7">
+          <strong style="color:var(--text)">חודש אחרון:</strong><br>
+          ריבית: <strong style="color:var(--danger)">~24 ₪</strong> בלבד<br>
+          קרן: <strong style="color:var(--accent)">~6,302 ₪</strong><br>
+          ← ההיפך המוחלט!
+        </div>
+      </div>
+    </div>
+
+    <!-- INTEREST RATE BENCHMARKS -->
+    <div style="font-size:0.83rem;font-weight:700;color:var(--purple);margin-bottom:8px">💡 ריביות ממוצעות לפי סוג הלוואה (ישראל 2024)</div>
+    <div class="benchmark-grid" style="margin-bottom:12px">
+      <div class="benchmark-item">
+        <div class="b-name">🏠 משכנתא קבועה</div>
+        <div class="b-val">4%–6%</div>
+        <div class="b-period">הכי זול | ל-20–30 שנה</div>
+      </div>
+      <div class="benchmark-item">
+        <div class="b-name">📈 משכנתא פריים</div>
+        <div class="b-val">פריים±1%</div>
+        <div class="b-period">כרגע ~6.5%–8% | משתנה</div>
+      </div>
+      <div class="benchmark-item">
+        <div class="b-name">🚗 הלוואת רכב</div>
+        <div class="b-val">5%–9%</div>
+        <div class="b-period">תלוי בנק ותקופה</div>
+      </div>
+      <div class="benchmark-item">
+        <div class="b-name">🏦 הלוואה אישית</div>
+        <div class="b-val">6%–12%</div>
+        <div class="b-period">תלוי דירוג אשראי</div>
+      </div>
+      <div class="benchmark-item">
+        <div class="b-name">💳 כרטיס אשראי</div>
+        <div class="b-val" style="color:var(--accent3)">12%–18%</div>
+        <div class="b-period">הכי יקר — להימנע</div>
+      </div>
+      <div class="benchmark-item">
+        <div class="b-name">⚠️ חוץ-בנקאיות</div>
+        <div class="b-val" style="color:var(--danger)">15%–30%+</div>
+        <div class="b-period">בזהירות רבה</div>
+      </div>
+    </div>
+
+    <!-- REFINANCE TIP -->
+    <div class="note" style="margin-top:0">
+      ⚡ <strong>מחזור הלוואה:</strong> הזמן הטוב ביותר הוא <strong>בשנים הראשונות</strong> — כשעדיין חייב הרבה קרן. מחזור בשנה 17 מ-20 לא יחסוך כמעט כלום, כי כבר שילמת את רוב הריבית. כדאי לשקול מחזור כשהריבית בשוק ירדה <strong>1.5% ומעלה</strong> ביחס לריבית שלך.
+    </div>
+  </div>
+
+  <div id="loan-result" style="display:none">
+    <div class="result-box purple">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px">
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:3px">החזר חודשי</div>
+          <div class="result-main" style="color:var(--purple)" id="loan-monthly">₪0</div>
+          <div class="result-label" id="loan-monthly-label"></div>
+        </div>
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:3px">סך ריבית ששולמה</div>
+          <div class="result-main negative" id="loan-total-interest">₪0</div>
+        </div>
+      </div>
+      <div class="result-grid" style="margin-top:14px">
+        <div class="result-stat"><div class="val" id="loan-total-paid">₪0</div><div class="lbl">סך הכל ששולם</div></div>
+        <div class="result-stat"><div class="val negative" id="loan-interest-pct">0%</div><div class="lbl">% ריבית מסך התשלומים</div></div>
+        <div class="result-stat"><div class="val" id="loan-first-year-interest">₪0</div><div class="lbl">ריבית שנה ראשונה</div></div>
+        <div class="result-stat"><div class="val" id="loan-balance-half">₪0</div><div class="lbl">יתרה באמצע התקופה</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:5px">קרן מול ריבית</div>
+        <div class="timeline-bar" id="loan-bar"></div>
+        <div class="bar-legend">
+          <span><i class="dot" style="background:var(--purple)"></i><span>קרן</span></span>
+          <span><i class="dot" style="background:var(--danger)"></i><span>ריבית</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title purple">גרף קרן וריבית לפי שנה</div><div class="chart-wrap"><canvas id="loan-chart"></canvas></div></div>
+    <div class="card">
+      <div class="card-title purple">לוח סילוקין</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table id="loan-table"></table></div>
+    </div>
+  </div>
+
+<div class="formula-box">
+  <div class="formula-box-title">📐 נוסחאות החישוב — הלוואה ומשכנתא</div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">שפיצר — החזר חודשי קבוע</div>
+    <div class="formula-eq">
+M = P × [r(1+r)ⁿ] / [(1+r)ⁿ − 1]
+
+r = annual_rate / 12
+n = years × 12
+    </div>
+    <div class="formula-vars">
+      <span><b>M</b> = החזר חודשי קבוע</span>
+      <span><b>P</b> = קרן ההלוואה</span>
+      <span><b>r</b> = ריבית חודשית (שנתי ÷ 12)</span>
+      <span><b>n</b> = סה"כ חודשים</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">פירוט כל חודש (לוח סילוקין)</div>
+    <div class="formula-eq">
+Interest_m  = Balance_m × r
+Principal_m = M − Interest_m
+Balance_m+1 = Balance_m − Principal_m
+    </div>
+    <div class="formula-vars">
+      <span>בחודשים ראשונים: רוב התשלום הוא ריבית</span>
+      <span>בחודשים אחרונים: רוב התשלום הוא קרן</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">ריבית בלבד (Bullet)</div>
+    <div class="formula-eq">
+Monthly = P × (annual_rate / 12)
+Balloon = P   (at end of term)
+Total_interest = Monthly × n
+    </div>
+    <div class="formula-vars">
+      <span>הקרן לא יורדת — מוחזרת בתשלום אחד בסוף</span>
+      <span>תשלום חודשי נמוך אך סך ריבית גבוה בהרבה משפיצר</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+</main>
+
+<script>
+// ================================================================
+// CURRENCY STATE
+// ================================================================
+let currency = '₪'; // '₪' or '$'
+let isUSD = false;
+
+function toggleCurrency() {
+  isUSD = !isUSD;
+  currency = isUSD ? '$' : '₪';
+  const track = document.getElementById('toggle-track');
+  const ils = document.getElementById('cur-label-ils');
+  const usd = document.getElementById('cur-label-usd');
+  if (isUSD) {
+    track.classList.add('usd');
+    ils.className = 'cur-label inactive-cur';
+    usd.className = 'cur-label active-cur';
+  } else {
+    track.classList.remove('usd');
+    ils.className = 'cur-label active-cur';
+    usd.className = 'cur-label inactive-cur';
+  }
+  // Update all currency symbols in labels
+  document.querySelectorAll('.cur-sym,.cur-sym2').forEach(el => el.textContent = currency);
+}
+
+// ================================================================
+// DURATION UNITS (years/months)
+// ================================================================
+const unitState = {}; // e.g. {ci:'y', loan:'y'}
+
+function setUnit(prefix, unit) {
+  unitState[prefix] = unit;
+  document.getElementById(prefix+'-unit-y').classList.toggle('active', unit==='y');
+  document.getElementById(prefix+'-unit-m').classList.toggle('active', unit==='m');
+}
+
+function getMonths(prefix) {
+  const val = parseFloat(document.getElementById(prefix+'-duration').value) || 0;
+  const unit = unitState[prefix] || 'y';
+  return unit === 'y' ? val * 12 : val;
+}
+function getYears(prefix) { return getMonths(prefix) / 12; }
+function durLabel(prefix) {
+  const val = parseFloat(document.getElementById(prefix+'-duration').value) || 0;
+  const unit = unitState[prefix] || 'y';
+  return unit === 'y' ? `${val} שנה` : `${val} חודשים (${(val/12).toFixed(1)} שנה)`;
+}
+
+// Init unit states
+unitState['ci'] = 'y'; unitState['sc-a'] = 'y'; unitState['sc-b'] = 'y'; unitState['loan'] = 'y';
+
+// ================================================================
+// UTILITIES
+// ================================================================
+const fmtFull = (n, cur) => (cur||currency) + Math.round(n).toLocaleString('he-IL');
+const fmtK = (n, cur) => {
+  const c = cur||currency; const abs=Math.abs(n);
+  if(abs>=1_000_000) return c+(n/1_000_000).toFixed(2)+'M';
+  if(abs>=1_000) return c+(n/1_000).toFixed(1)+'K';
+  return c+Math.round(n).toLocaleString();
+};
+
+// NAV — handles both #mainNav (desktop) and #mobileNav (mobile)
+function activateModule(mod) {
+  // Hide ALL modules first, then show only the target
+  document.querySelectorAll('.module').forEach(m => {
+    m.classList.remove('active');
+    if (m.id === 'module-' + mod) m.classList.add('active');
+  });
+  document.querySelectorAll('.nav-tab').forEach(b => {
+    b.classList.remove('active');
+    if (b.dataset.module === mod) b.classList.add('active');
+  });
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+document.querySelectorAll('.nav-tab').forEach(btn => {
+  btn.addEventListener('click', () => activateModule(btn.dataset.module));
+});
+function goTo(mod) { activateModule(mod); }
+function goHome() { goTo('home'); }
+
+// CHART helper
+const charts = {};
+function makeChart(id, labels, datasets, cur, opts={}) {
+  if(charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), {
+    type: opts.type||'line',
+    data: { labels, datasets: datasets.map(({label,data,color,fill=true,tension=0.3,borderDash=[]})=>({
+      label, data,
+      borderColor: color,
+      backgroundColor: fill ? color+'18':'transparent',
+      borderWidth: 2.5, pointRadius:0, pointHoverRadius:5,
+      fill, tension, borderDash,
+    }))},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{color:'#94a3b8',font:{family:'Heebo',size:11},boxWidth:11}},
+        tooltip:{backgroundColor:'#111827',borderColor:'#1e2d45',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: ${cur||currency}${Math.round(ctx.parsed.y).toLocaleString()}`}}
+      },
+      scales:{
+        x:{ticks:{color:'#64748b',font:{family:'Heebo',size:9},maxTicksLimit:10},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#64748b',font:{family:'Heebo',size:9},callback:v=>(cur||currency)+Math.round(v).toLocaleString()},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+}
+
+// ================================================================
+// MODULE 1: COMPOUND INTEREST
+// ================================================================
+function calcCompound() {
+  const P = parseFloat(document.getElementById('ci-initial').value)||0;
+  const M = parseFloat(document.getElementById('ci-monthly').value)||0;
+  const months = getMonths('ci');
+  const years = months/12;
+  const rate = parseFloat(document.getElementById('ci-rate').value)/100;
+  const inflation = parseFloat(document.getElementById('ci-inflation').value)/100;
+  const r = rate/12;
+
+  const labels=[], totalData=[], investedData=[], realData=[], tableRows=[];
+  let balance=P, totalInvested=P;
+  // Build yearly snapshots
+  const totalMonths = Math.round(months);
+  for(let m=0;m<=totalMonths;m++){
+    if(m>0){ balance=balance*(1+r)+M; totalInvested+=M; }
+    if(m%12===0||m===totalMonths){
+      const yr=m/12;
+      const real=balance/Math.pow(1+inflation,yr);
+      labels.push(m===0?'התחלה':(m%12===0?'שנה '+Math.round(yr):'חודש '+m));
+      totalData.push(Math.round(balance));
+      investedData.push(Math.round(totalInvested));
+      realData.push(Math.round(real));
+      if(m>0) tableRows.push({label:m%12===0?'שנה '+Math.round(yr):'חודש '+m,total:balance,invested:totalInvested,profit:balance-totalInvested,real});
+    }
+  }
+
+  const fT=totalData[totalData.length-1], fI=investedData[investedData.length-1];
+  const fR=realData[realData.length-1], fP=fT-fI;
+  const realRet=(fR-fI)/fI*100;
+
+  document.getElementById('ci-total-val').textContent=fmtFull(fT);
+  document.getElementById('ci-dur-label').textContent=durLabel('ci');
+  document.getElementById('ci-invested-val').textContent=fmtFull(fI);
+  document.getElementById('ci-profit-val').textContent=fmtFull(fP);
+  document.getElementById('ci-multiple-val').textContent=(fT/(fI||1)).toFixed(2)+'x';
+  document.getElementById('ci-roi-val').textContent=((fP/fI)*100).toFixed(1)+'%';
+  const ip=(fI/fT*100).toFixed(1);
+  document.getElementById('ci-bar').innerHTML=`<div style="width:${ip}%;background:var(--accent2)"></div><div style="width:${100-ip}%;background:var(--accent)"></div>`;
+  document.getElementById('ci-real-val').textContent=fmtFull(fR);
+  document.getElementById('ci-infl-loss').textContent=fmtFull(fT-fR);
+  document.getElementById('ci-real-ret').textContent=(realRet>=0?'+':'')+realRet.toFixed(1)+'%';
+  document.getElementById('ci-real-ret').className='val '+(realRet>=0?'positive':'negative');
+
+  makeChart('ci-chart',labels,[
+    {label:'שווי נומינלי',data:totalData,color:'#00d4aa'},
+    {label:'שווי ריאלי',data:realData,color:'#f59e0b'},
+    {label:'הפקדות',data:investedData,color:'#3b82f6'},
+  ]);
+
+  let th=`<thead><tr style="border-bottom:1px solid var(--border)"><th>תקופה</th><th>שווי נומינלי</th><th>שווי ריאלי</th><th>הפקדות</th><th>רווח</th></tr></thead><tbody>`;
+  tableRows.forEach(r=>{ th+=`<tr><td>${r.label}</td><td class="tbl-mono">${fmtFull(r.total)}</td><td class="tbl-mono" style="color:var(--accent3)">${fmtFull(r.real)}</td><td class="tbl-mono">${fmtFull(r.invested)}</td><td class="tbl-mono positive">${fmtFull(r.profit)}</td></tr>`; });
+  document.getElementById('ci-table').innerHTML=th+'</tbody>';
+  document.getElementById('ci-result').style.display='block';
+}
+
+function resetCompound(){
+  document.getElementById('ci-initial').value=10000;
+  document.getElementById('ci-monthly').value=500;
+  document.getElementById('ci-duration').value=20;
+  document.getElementById('ci-rate').value=8; document.getElementById('ci-rate-val').textContent='8%';
+  document.getElementById('ci-inflation').value=3; document.getElementById('ci-infl-val').textContent='3%';
+  setUnit('ci','y');
+  document.getElementById('ci-result').style.display='none';
+}
+
+function calcInflation(){
+  const amount=parseFloat(document.getElementById('inf-amount').value)||0;
+  const futureYear=parseInt(document.getElementById('inf-year').value)||2045;
+  const rate=parseFloat(document.getElementById('inf-rate').value)/100;
+  const yrs=Math.max(0,futureYear-new Date().getFullYear());
+  const factor=Math.pow(1+rate,yrs);
+  const real=amount/factor;
+  document.getElementById('inf-nominal').textContent=fmtFull(amount);
+  document.getElementById('inf-real').textContent=fmtFull(real);
+  document.getElementById('inf-lost').textContent=fmtFull(amount-real);
+  document.getElementById('inf-needed').textContent=fmtFull(100000*factor);
+  document.getElementById('inf-result').style.display='block';
+}
+
+// ================================================================
+// MODULE 2: HISTORICAL
+// ================================================================
+function selectTicker(ticker,el){
+  document.getElementById('hist-ticker').value=ticker;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function calcHistorical(){
+  const ticker=document.getElementById('hist-ticker').value.trim().toUpperCase();
+  const startDate=document.getElementById('hist-startdate').value;
+  const initial=parseFloat(document.getElementById('hist-initial').value)||0;
+  const monthly=parseFloat(document.getElementById('hist-monthly').value)||0;
+  if(!ticker||!startDate) return;
+  document.getElementById('hist-result').style.display='none';
+  document.getElementById('hist-error').style.display='none';
+  document.getElementById('hist-loading').style.display='block';
+  try{
+    const startTs=Math.floor(new Date(startDate).getTime()/1000);
+    const endTs=Math.floor(Date.now()/1000);
+    const url=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${startTs}&period2=${endTs}&interval=1mo`;
+    const res=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+    const json=await res.json();
+    if(json.chart.error||!json.chart.result) throw new Error('לא נמצאו נתונים עבור '+ticker);
+    const result=json.chart.result[0];
+    const timestamps=result.timestamp;
+    const closes=result.indicators.adjclose?.[0]?.adjclose||result.indicators.quote[0].close;
+    if(!timestamps||!closes) throw new Error('נתונים חסרים');
+    let shares=0,totalInvested=0;
+    const labels=[],portVals=[],invVals=[];
+    if(initial>0&&closes[0]){shares+=initial/closes[0];totalInvested+=initial;}
+    for(let i=0;i<timestamps.length;i++){
+      const price=closes[i]; if(!price) continue;
+      if(i>0&&monthly>0){shares+=monthly/price;totalInvested+=monthly;}
+      labels.push(new Date(timestamps[i]*1000).toLocaleDateString('he-IL',{year:'2-digit',month:'numeric'}));
+      portVals.push(Math.round(shares*price));
+      invVals.push(Math.round(totalInvested));
+    }
+    const fV=portVals[portVals.length-1], fI=invVals[invVals.length-1];
+    const profit=fV-fI, totalRet=(fV-fI)/fI*100;
+    const yrs=(timestamps[timestamps.length-1]-timestamps[0])/(365.25*24*3600);
+    const cagr=(Math.pow(fV/(fI||1),1/(yrs||1))-1)*100;
+    document.getElementById('hist-total-val').textContent='$'+Math.round(fV).toLocaleString();
+    document.getElementById('hist-period-label').textContent=`${ticker} | ${yrs.toFixed(1)} שנים`;
+    document.getElementById('hist-return-val').textContent=(totalRet>=0?'+':'')+totalRet.toFixed(1)+'%';
+    document.getElementById('hist-return-val').className='result-main '+(totalRet>=0?'positive':'negative');
+    document.getElementById('hist-invested-val').textContent='$'+Math.round(fI).toLocaleString();
+    document.getElementById('hist-profit-val').textContent=(profit>=0?'+$':'-$')+Math.abs(Math.round(profit)).toLocaleString();
+    document.getElementById('hist-profit-val').className='val '+(profit>=0?'positive':'negative');
+    document.getElementById('hist-cagr-val').textContent=cagr.toFixed(1)+'%';
+    document.getElementById('hist-multiple-val').textContent=(fV/(fI||1)).toFixed(2)+'x';
+    const step=Math.max(1,Math.floor(labels.length/60));
+    makeChart('hist-chart',labels.filter((_,i)=>i%step===0),[
+      {label:'שווי תיק ($)',data:portVals.filter((_,i)=>i%step===0),color:'#00d4aa'},
+      {label:'סך הפקדות ($)',data:invVals.filter((_,i)=>i%step===0),color:'#3b82f6'},
+    ],'$');
+    document.getElementById('hist-loading').style.display='none';
+    document.getElementById('hist-result').style.display='block';
+  } catch(err){
+    document.getElementById('hist-loading').style.display='none';
+    const el=document.getElementById('hist-error');
+    el.textContent='⚠️ שגיאה: '+err.message;
+    el.style.display='block';
+  }
+}
+
+// ================================================================
+// MODULE 3: RETIREMENT
+// ================================================================
+function calcRetirement(){
+  const ageNow=parseInt(document.getElementById('ret-age-now').value)||30;
+  const ageRetire=parseInt(document.getElementById('ret-age-retire').value)||60;
+  const ageLife=parseInt(document.getElementById('ret-life').value)||85;
+  const savings=parseFloat(document.getElementById('ret-savings').value)||0;
+  const expensesMonthly=parseFloat(document.getElementById('ret-expenses').value)||5000;
+  const growthRate=parseFloat(document.getElementById('ret-growth').value)/100;
+  const retireRate=parseFloat(document.getElementById('ret-retire-rate').value)/100;
+  const inflation=parseFloat(document.getElementById('ret-inflation').value)/100;
+  const withdrawRate=parseFloat(document.getElementById('ret-withdraw-rate').value)/100;
+
+  const yearsSave=Math.max(0,ageRetire-ageNow);
+  const yearsRetire=Math.max(0,ageLife-ageRetire);
+  const r=growthRate/12;
+  const n=yearsSave*12;
+
+  // Expenses adjusted for inflation at retirement
+  const expensesAtRetire=expensesMonthly*Math.pow(1+inflation,yearsSave);
+  const annualExpenses=expensesAtRetire*12;
+
+  // Target based on chosen withdrawal rate
+  const target=annualExpenses/withdrawRate;
+
+  // Monthly deposit needed
+  const FV=target-savings*Math.pow(1+r,n);
+  const monthlyNeeded=FV>0&&n>0?FV*r/(Math.pow(1+r,n)-1):0;
+
+  // Projected portfolio at retirement
+  const projected=savings*Math.pow(1+r,n)+(monthlyNeeded>0?monthlyNeeded*(Math.pow(1+r,n)-1)/r:0);
+  const monthlyIncome=projected*withdrawRate/12;
+
+  // Sustainability — expenses grow with inflation each year (COLA)
+  const rR=retireRate/12;
+  let bal=projected, susYears=0;
+  const maxM=Math.max(yearsRetire,50)*12+600;
+  for(let m=0;m<maxM;m++){
+    const yearIdx=Math.floor(m/12);
+    const colaExpenses=expensesAtRetire*Math.pow(1+inflation,yearIdx);
+    bal=bal*(1+rR)-colaExpenses;
+    if(bal<=0){susYears=m/12;break;}
+    if(m===maxM-1) susYears=999;
+  }
+
+  const wrPct=(withdrawRate*100).toFixed(1);
+  document.getElementById('ret-target4').textContent=fmtFull(target);
+  document.getElementById('ret-target4-label').textContent=
+    `הוצאה שנתית ÷ ${wrPct}% | ${fmtFull(expensesAtRetire)}/חודש בגיל ${ageRetire} (לאחר אינפלציה)`;
+  document.getElementById('ret-monthly-needed').textContent=fmtFull(Math.max(0,monthlyNeeded));
+  document.getElementById('ret-years-save').textContent=yearsSave;
+  document.getElementById('ret-projected').textContent=fmtFull(projected);
+  document.getElementById('ret-monthly-income').textContent=fmtFull(monthlyIncome);
+  document.getElementById('ret-wr-stat').textContent=wrPct+'%';
+  document.getElementById('ret-sustainability').textContent=susYears>=999?'∞':susYears.toFixed(0)+' שנה';
+
+  const isRule4=Math.abs(withdrawRate-0.04)<0.001;
+  document.getElementById('rule4-explain').innerHTML=
+    `<strong>שיעור משיכה: ${wrPct}%${isRule4?' — כלל ה-4% הקלאסי':''}</strong><br>
+    כדי למשוך <strong>${fmtFull(expensesAtRetire)}/חודש</strong> (ערך ריאלי בגיל ${ageRetire} לאחר ${(inflation*100).toFixed(0)}% אינפלציה/שנה),
+    תצטרך <strong>${fmtFull(target)}</strong> בחשבון.<br>
+    ${fmtFull(expensesMonthly)}/חודש כיום → ${fmtFull(expensesAtRetire)}/חודש בגיל ${ageRetire}.<br>
+    <span style="color:var(--accent)">עם תשואה של ${(retireRate*100).toFixed(1)}% בפרישה, הכסף צפוי להחזיק ${susYears>=999?'מעל 100 שנה':'כ-'+susYears.toFixed(0)+' שנה'}.</span><br>
+    ${withdrawRate<0.03?'<span style="color:var(--accent)">✅ שמרני מאוד — צפוי להשאיר עיזבון.</span>':withdrawRate>0.05?'<span style="color:var(--danger)">⚠️ אגרסיבי — סיכון שהקרן תיגמר. שקול להוריד.</span>':'<span style="color:var(--accent3)">✅ שיעור מאוזן.</span>'}`;
+
+  // Chart 1: Savings
+  const saveLabels=['התחלה'],saveData=[Math.round(savings)],targetLine=[Math.round(target)];
+  let sbal=savings;
+  for(let y=1;y<=yearsSave;y++){
+    for(let m=0;m<12;m++) sbal=sbal*(1+r)+Math.max(0,monthlyNeeded);
+    saveLabels.push('גיל '+(ageNow+y));
+    saveData.push(Math.round(sbal));
+    targetLine.push(Math.round(target));
+  }
+  makeChart('ret-chart-save',saveLabels,[
+    {label:'חיסכון',data:saveData,color:'#3b82f6'},
+    {label:`יעד (${wrPct}%)`,data:targetLine,color:'#f59e0b',fill:false,borderDash:[6,3]},
+  ]);
+
+  // Chart 2: Spending phase — nominal + real
+  // Each year, nominal expenses grow with inflation (cost-of-living adjustment)
+  const spendLabels=[],spendData=[],spendRealData=[];
+  let spenBal=projected;
+  const rRet=retireRate/12;
+  for(let y=0;y<=yearsRetire;y++){
+    spendLabels.push('גיל '+(ageRetire+y));
+    const nom=Math.round(Math.max(0,spenBal));
+    spendData.push(nom);
+    // Real value: deflate back to retirement-day money
+    spendRealData.push(Math.round(nom/Math.pow(1+inflation,y)));
+    // Monthly withdrawal grows with inflation each year (COLA)
+    const monthlyExpThisYear=expensesAtRetire*Math.pow(1+inflation,y);
+    for(let m=0;m<12;m++){spenBal=spenBal*(1+rRet)-monthlyExpThisYear;if(spenBal<0)spenBal=0;}
+  }
+  makeChart('ret-chart-spend',spendLabels,[
+    {label:'יתרת תיק (נומינלי)',data:spendData,color:'#f59e0b'},
+    {label:'ערך ריאלי (במחירי היום)',data:spendRealData,color:'#00d4aa',fill:false,borderDash:[5,3]},
+  ]);
+
+  // Scenarios table
+  const scenarios=[
+    {label:'פסימי ('+(((growthRate-0.02)*100).toFixed(0))+'%)',rate:growthRate-0.02},
+    {label:'בסיסי ('+(growthRate*100).toFixed(0)+'%)',rate:growthRate},
+    {label:'אופטימי ('+(((growthRate+0.02)*100).toFixed(0))+'%)',rate:growthRate+0.02},
+    {label:'מצוין ('+(((growthRate+0.04)*100).toFixed(0))+'%)',rate:growthRate+0.04},
+  ];
+  let st=`<thead><tr style="border-bottom:1px solid var(--border)"><th>תרחיש</th><th>שווי בפרישה</th><th>הכנסה/חודש (${wrPct}%)</th><th>הפקדה נדרשת</th></tr></thead><tbody>`;
+  scenarios.forEach(s=>{
+    const r2=Math.max(0.001,s.rate)/12;
+    const proj2=savings*Math.pow(1+r2,n)+(monthlyNeeded>0?monthlyNeeded*(Math.pow(1+r2,n)-1)/r2:0);
+    const inc2=proj2*withdrawRate/12;
+    const fv2=target-savings*Math.pow(1+r2,n);
+    const m2=fv2>0&&n>0?fv2*r2/(Math.pow(1+r2,n)-1):0;
+    st+=`<tr><td>${s.label}</td><td class="tbl-mono">${fmtFull(proj2)}</td><td class="tbl-mono">${fmtFull(inc2)}</td><td class="tbl-mono">${fmtFull(Math.max(0,m2))}</td></tr>`;
+  });
+  document.getElementById('ret-scenarios-table').innerHTML=st+'</tbody>';
+  document.getElementById('ret-result').style.display='block';
+}
+
+// ================================================================
+// MODULE 4: SCENARIO COMPARISON
+// ================================================================
+function runScenario(P,M,months,rate){
+  const r=rate/12; let bal=P,inv=P;
+  const data=[Math.round(bal)],invD=[Math.round(inv)];
+  const labels=['התחלה'];
+  for(let m=1;m<=months;m++){
+    bal=bal*(1+r)+M; inv+=M;
+    if(m%12===0||m===months){
+      data.push(Math.round(bal));
+      invD.push(Math.round(inv));
+      labels.push(m%12===0?'שנה '+Math.round(m/12):'חודש '+m);
+    }
+  }
+  return{data,invD,final:bal,invested:inv,labels};
+}
+
+function calcCompare(){
+  const aP=parseFloat(document.getElementById('sc-a-initial').value)||0;
+  const aM=parseFloat(document.getElementById('sc-a-monthly').value)||0;
+  const aMonths=getMonths('sc-a');
+  const aR=parseFloat(document.getElementById('sc-a-rate').value)/100;
+  const bP=parseFloat(document.getElementById('sc-b-initial').value)||0;
+  const bM=parseFloat(document.getElementById('sc-b-monthly').value)||0;
+  const bMonths=getMonths('sc-b');
+  const bR=parseFloat(document.getElementById('sc-b-rate').value)/100;
+
+  const maxMonths=Math.max(aMonths,bMonths);
+  const A=runScenario(aP,aM,maxMonths,aR);
+  const B=runScenario(bP,bM,maxMonths,bR);
+
+  const diff=B.final-A.final;
+  document.getElementById('sc-a-total').textContent=fmtFull(A.final);
+  document.getElementById('sc-a-label').textContent=durLabel('sc-a')+' | תשואה '+(aR*100).toFixed(1)+'%';
+  document.getElementById('sc-b-total').textContent=fmtFull(B.final);
+  document.getElementById('sc-b-label').textContent=durLabel('sc-b')+' | תשואה '+(bR*100).toFixed(1)+'%';
+  document.getElementById('sc-diff-total').textContent=(diff>=0?'+':'')+fmtFull(Math.abs(diff));
+  document.getElementById('sc-diff-invested').textContent=fmtFull(Math.abs(B.invested-A.invested));
+  document.getElementById('sc-winner').textContent=diff>0?'תרחיש ב׳ 🏆':diff<0?'תרחיש א׳ 🏆':'שווה';
+  document.getElementById('sc-diff-roi').textContent=((bR-aR)*100).toFixed(1)+'%';
+
+  makeChart('sc-chart',A.labels,[
+    {label:'תרחיש א׳',data:A.data,color:'#00d4aa'},
+    {label:'תרחיש ב׳',data:B.data,color:'#3b82f6'},
+  ]);
+
+  let th=`<thead><tr style="border-bottom:1px solid var(--border)"><th>תקופה</th><th style="color:var(--accent)">א׳</th><th style="color:var(--accent2)">ב׳</th><th>הפרש</th></tr></thead><tbody>`;
+  A.labels.forEach((lbl,i)=>{
+    const d=B.data[i]-A.data[i];
+    th+=`<tr><td>${lbl}</td><td class="tbl-mono">${fmtFull(A.data[i])}</td><td class="tbl-mono">${fmtFull(B.data[i])}</td><td class="tbl-mono ${d>=0?'positive':'negative'}">${d>=0?'+':''}${fmtFull(Math.abs(d))}</td></tr>`;
+  });
+  document.getElementById('sc-table').innerHTML=th+'</tbody>';
+  document.getElementById('sc-result').style.display='block';
+}
+
+// ================================================================
+// MODULE 5: LOAN
+// ================================================================
+function calcLoan(){
+  const amount=parseFloat(document.getElementById('loan-amount').value)||0;
+  const months=getMonths('loan');
+  const annualRate=parseFloat(document.getElementById('loan-rate').value)/100;
+  const type=document.getElementById('loan-type').value;
+  const r=annualRate/12; const n=Math.round(months);
+
+  let monthly=type==='interest-only'?amount*r:r===0?amount/n:amount*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+  const totalPaid=type==='interest-only'?monthly*n+amount:monthly*n;
+  const totalInterest=totalPaid-amount;
+  const interestPct=(totalInterest/totalPaid*100);
+
+  let firstYearInterest=0, bal=amount;
+  const principals=[],interests=[],balances=[];
+  for(let m=1;m<=n;m++){
+    const intM=bal*r, prinM=type==='interest-only'?0:monthly-intM;
+    if(m<=12) firstYearInterest+=intM;
+    bal-=prinM;
+    principals.push(Math.round(prinM)); interests.push(Math.round(intM)); balances.push(Math.round(Math.max(0,bal)));
+  }
+  const balanceHalf=balances[Math.floor(n/2)-1]||0;
+
+  document.getElementById('loan-monthly').textContent=fmtFull(monthly);
+  document.getElementById('loan-monthly-label').textContent=`למשך ${durLabel('loan')} (${n} תשלומים)`;
+  document.getElementById('loan-total-interest').textContent=fmtFull(totalInterest);
+  document.getElementById('loan-total-paid').textContent=fmtFull(totalPaid);
+  document.getElementById('loan-interest-pct').textContent=interestPct.toFixed(1)+'%';
+  document.getElementById('loan-first-year-interest').textContent=fmtFull(firstYearInterest);
+  document.getElementById('loan-balance-half').textContent=fmtFull(balanceHalf);
+  document.getElementById('loan-bar').innerHTML=`<div style="width:${(100-interestPct).toFixed(1)}%;background:var(--purple)"></div><div style="width:${interestPct.toFixed(1)}%;background:var(--danger)"></div>`;
+
+  // Annual chart
+  const labelsA=[],annPrin=[],annInt=[],annBal=[];
+  const years=Math.ceil(n/12);
+  for(let y=0;y<years;y++){
+    labelsA.push('שנה '+(y+1));
+    const s=y*12,e=Math.min(s+12,n);
+    annPrin.push(principals.slice(s,e).reduce((a,b)=>a+b,0));
+    annInt.push(interests.slice(s,e).reduce((a,b)=>a+b,0));
+    annBal.push(balances[e-1]||0);
+  }
+  makeChart('loan-chart',labelsA,[
+    {label:'קרן שנתית',data:annPrin,color:'#a855f7'},
+    {label:'ריבית שנתית',data:annInt,color:'#ef4444'},
+    {label:'יתרת קרן',data:annBal,color:'#64748b',fill:false},
+  ]);
+
+  // Table
+  const showRows=[...Array.from({length:Math.min(24,n)},(_,i)=>i),...Array.from({length:Math.min(12,n)},(_,i)=>n-Math.min(12,n)+i)];
+  const uniq=[...new Set(showRows)].sort((a,b)=>a-b);
+  let th=`<thead><tr style="border-bottom:1px solid var(--border)"><th>חודש</th><th>החזר</th><th>קרן</th><th>ריבית</th><th>יתרה</th></tr></thead><tbody>`;
+  let prevIdx=-1;
+  uniq.forEach(i=>{
+    if(i<0||i>=n) return;
+    if(prevIdx>=0&&i>prevIdx+1) th+='<tr><td colspan="5" style="text-align:center;padding:6px;color:var(--text-muted)">. . .</td></tr>';
+    th+=`<tr><td>${i+1}</td><td class="tbl-mono">${fmtFull(monthly)}</td><td class="tbl-mono positive">${fmtFull(principals[i])}</td><td class="tbl-mono negative">${fmtFull(interests[i])}</td><td class="tbl-mono">${fmtFull(balances[i])}</td></tr>`;
+    prevIdx=i;
+  });
+  document.getElementById('loan-table').innerHTML=th+'</tbody>';
+  document.getElementById('loan-result').style.display='block';
+}
+
+// ================================================================
+// DATE PICKER
+// ================================================================
+const MONTHS_HE=['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
+const MONTHS_HE_FULL=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+let pickerYear=2010;
+
+function initDatePicker(){
+  renderMonthGrid(); updateDateDisplay();
+  document.addEventListener('click',e=>{
+    if(!document.getElementById('date-picker-wrap').contains(e.target)) closeDatePicker();
+  });
+}
+function toggleDatePicker(){
+  const dd=document.getElementById('date-dropdown'),disp=document.getElementById('date-display');
+  if(dd.classList.contains('open')){closeDatePicker();}
+  else{dd.classList.add('open');disp.classList.add('open');}
+}
+function closeDatePicker(){
+  document.getElementById('date-dropdown').classList.remove('open');
+  document.getElementById('date-display').classList.remove('open');
+}
+function changePickerYear(d){
+  const ny=pickerYear+d;
+  if(ny<1990||ny>new Date().getFullYear()) return;
+  pickerYear=ny; document.getElementById('picker-year').textContent=pickerYear; renderMonthGrid();
+}
+function renderMonthGrid(){
+  const now=new Date(), grid=document.getElementById('date-months');
+  const stored=document.getElementById('hist-startdate').value;
+  const sel=stored?new Date(stored):null;
+  grid.innerHTML='';
+  MONTHS_HE.forEach((m,i)=>{
+    const btn=document.createElement('button'); btn.className='month-btn'; btn.textContent=m;
+    if(pickerYear===now.getFullYear()&&i>now.getMonth()) btn.classList.add('disabled');
+    if(sel&&sel.getFullYear()===pickerYear&&sel.getMonth()===i) btn.classList.add('selected');
+    btn.onclick=()=>selectMonth(i); grid.appendChild(btn);
+  });
+}
+function selectMonth(i){
+  document.getElementById('hist-startdate').value=`${pickerYear}-${String(i+1).padStart(2,'0')}-01`;
+  updateDateDisplay(); closeDatePicker();
+}
+function updateDateDisplay(){
+  const stored=document.getElementById('hist-startdate').value;
+  if(stored){
+    const d=new Date(stored);
+    document.getElementById('date-display-text').textContent=MONTHS_HE_FULL[d.getMonth()]+' '+d.getFullYear();
+    pickerYear=d.getFullYear(); document.getElementById('picker-year').textContent=pickerYear;
+  }
+}
+
+// ================================================================
+// INIT
+// ================================================================
+window.addEventListener('load',()=>{
+  try { calcCompound(); } catch(e) { console.warn('calcCompound init:', e); }
+  try { initDatePicker(); } catch(e) { console.warn('initDatePicker:', e); }
+  try { initSliders(); } catch(e) { console.warn('initSliders:', e); }
+});
+
+// ================================================================
+// SLIDER FILL — sets background gradient on WebKit/Blink
+// ================================================================
+function updateSliderFill(inp) {
+  const min = parseFloat(inp.min)||0;
+  const max = parseFloat(inp.max)||100;
+  const val = parseFloat(inp.value)||0;
+  const pct = Math.round((val - min) / (max - min) * 100);
+  // RTL-aware: in RTL direction the fill visually goes right→left
+  // We always want fill from left-thumb to left edge (high value = more fill)
+  inp.style.background = `linear-gradient(to right, var(--accent) ${pct}%, var(--slider-track) ${pct}%)`;
+}
+function initSliders() {
+  document.querySelectorAll('input[type="range"]').forEach(inp => {
+    updateSliderFill(inp);
+    inp.addEventListener('input', () => updateSliderFill(inp));
+  });
+}
+
+// ================================================================
+// THEME (DARK / LIGHT)
+// ================================================================
+let isLight = false;
+function toggleTheme() {
+  isLight = !isLight;
+  document.body.classList.toggle('light', isLight);
+  const btn = document.getElementById('theme-btn');
+  const lbl = document.getElementById('theme-label');
+  if (isLight) { btn.childNodes[0].textContent = '☀️ '; lbl.textContent = 'יום'; }
+  else         { btn.childNodes[0].textContent = '🌙 '; lbl.textContent = 'לילה'; }
+  // Update chart backgrounds if needed
+  document.querySelectorAll('input[type="range"]').forEach(inp => updateSliderFill(inp));
+}
+
+// ================================================================
+</script>
+</body>
+</html>
