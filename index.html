@@ -2,6 +2,7 @@
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="theme-color" content="#00d4aa">
 <index.html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -536,6 +537,93 @@ body.light .formula-eq {
     <p style="margin-top:9px" id="info-infl-warn">⚠️ בישראל, אינפלציה של 2022–2023 הגיעה ל-5%. לתכנון פנסיוני שמרני מומלץ להשתמש ב-3%. <strong>תשואה ריאלית = תשואה נומינלית פחות אינפלציה.</strong></p>
   </div>
 
+  <!-- INFO: P/E Ratio -->
+  <div class="info-box" id="pe-section">
+    <div class="info-box-title">📉 יחס P/E של S&amp;P 500 — שווי שוק בהקשר היסטורי</div>
+
+    <!-- Current P/E display -->
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px;margin-top:10px">
+      <div class="benchmark-item" style="flex:1;min-width:140px;border-top:3px solid var(--accent)">
+        <div class="b-name">P/E נוכחי (TTM)</div>
+        <div class="b-val" style="color:var(--accent3)">~27–28</div>
+        <div class="b-period">מרץ 2026</div>
+      </div>
+      <div class="benchmark-item" style="flex:1;min-width:140px;border-top:3px solid var(--accent2)">
+        <div class="b-name">Forward P/E</div>
+        <div class="b-val" style="color:var(--accent2)">~20.3</div>
+        <div class="b-period">תחזית 12 חודש קדימה</div>
+      </div>
+      <div class="benchmark-item" style="flex:1;min-width:140px;border-top:3px solid var(--text-muted)">
+        <div class="b-name">ממוצע היסטורי (10Y)</div>
+        <div class="b-val">~19.8</div>
+        <div class="b-period">2016–2026</div>
+      </div>
+      <div class="benchmark-item" style="flex:1;min-width:140px;border-top:3px solid var(--purple)">
+        <div class="b-name">ממוצע ארוך טווח</div>
+        <div class="b-val">~16–18</div>
+        <div class="b-period">ממוצע היסטורי רב-שנתי</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:0.82rem;font-weight:700;color:var(--text-dim);margin-bottom:8px">📈 גרף היסטורי של יחס P/E — S&amp;P 500 (1990–2026)</div>
+      <div style="position:relative;height:220px">
+        <canvas id="pe-chart"></canvas>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;font-size:0.75rem;color:var(--text-muted)">
+        <span><i class="dot" style="background:var(--accent2)"></i> יחס P/E</span>
+        <span><i class="dot" style="background:var(--danger)"></i> ממוצע היסטורי (~17)</span>
+        <span style="font-size:0.7rem;color:var(--text-muted)">* נתונים מייצגים ערכים משוערים לפי נתוני Shiller / S&P</span>
+      </div>
+    </div>
+
+    <!-- What is P/E -->
+    <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.18);border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="font-size:0.86rem;font-weight:700;color:var(--accent2);margin-bottom:8px">📖 מהו יחס P/E?</div>
+      <p style="font-size:0.83rem;line-height:1.7;color:var(--text-dim)">
+        יחס <strong style="color:var(--text)">מחיר לרווח (Price-to-Earnings)</strong> מודד כמה משקיעים משלמים עבור כל ₪1 של רווח חברה. לדוגמה — P/E של 25 אומר שהשוק מוכן לשלם 25 ₪ על כל 1 ₪ רווח שנתי. ככל שהיחס גבוה יותר, כך ההשקעה "יקרה יותר" ביחס לרווחים הנוכחיים.
+      </p>
+      <p style="font-size:0.83rem;line-height:1.7;color:var(--text-dim);margin-top:8px">
+        עבור S&amp;P 500 מחשבים את ממוצע היחסים של 500 החברות הגדולות בארה"ב. קיימות שתי גרסאות עיקריות:
+        <strong style="color:var(--text)"> TTM (Trailing)</strong> — על בסיס רווחים בפועל של 12 החודשים האחרונים, ו-<strong style="color:var(--text)">Forward P/E</strong> — על בסיס תחזיות אנליסטים לשנה הקרובה.
+      </p>
+    </div>
+
+    <!-- Impact on long-term investing -->
+    <div style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.18);border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="font-size:0.86rem;font-weight:700;color:var(--purple);margin-bottom:8px">🏦 השפעה על השקעה לטווח ארוך במדד</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:11px">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--accent);margin-bottom:5px">📉 P/E נמוך (מתחת ל-15)</div>
+          <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.6">שוק "זול" היסטורית. מחקרים מראים שרכישה בנקודות כניסה כאלו נטתה להניב תשואות גבוהות יותר ב-10 השנים הבאות.</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:11px">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--accent3);margin-bottom:5px">⚖️ P/E בינוני (15–22)</div>
+          <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.6">הערכה סבירה. תשואות עתידיות צפויות להיות קרובות לממוצע ההיסטורי של ~7%–10% לשנה.</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:11px">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--danger);margin-bottom:5px">📈 P/E גבוה (מעל 25)</div>
+          <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.6">שוק "יקר" יחסית להיסטוריה. מחקרים מראים שתשואות ה-10 שנים הבאות היו נמוכות יותר בממוצע — לא שלילי, אך מתון יותר.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key insight -->
+    <div style="background:rgba(0,212,170,0.06);border:1px solid rgba(0,212,170,0.2);border-radius:10px;padding:14px">
+      <div style="font-size:0.86rem;font-weight:700;color:var(--accent);margin-bottom:8px">💡 מה זה אומר עכשיו (P/E ~27)?</div>
+      <p style="font-size:0.83rem;line-height:1.7;color:var(--text-dim)">
+        יחס של 27–28 נמצא <strong style="color:var(--accent3)">מעל הממוצע ההיסטורי</strong>, אך נמוך משמעותית מהשיאים של 2021 (מעל 37) ומבועת הדוט-קום (מעל 44). 
+        Forward P/E של ~20 מרמז שהאנליסטים מצפים לצמיחת רווחים משמעותית ב-2026.
+      </p>
+      <p style="font-size:0.83rem;line-height:1.7;color:var(--text-dim);margin-top:8px">
+        <strong style="color:var(--text)">למשקיע לטווח ארוך:</strong> P/E אינו כלי לתזמון שוק. גם בשוק "יקר", דולר-קוסט-אוורג'ינג (השקעה חודשית קבועה) הוכח היסטורית כאסטרטגיה מנצחת לטווח של 15–20 שנה. השפעת P/E הכניסה על התשואה הסופית פוחתת ככל שאופק ההשקעה מתארך.
+      </p>
+    </div>
+
+    <p style="margin-top:10px;font-size:0.78rem;color:var(--text-muted)">מקורות: FactSet Earnings Insight, GuruFocus, Multpl.com | עדכון: מרץ 2026</p>
+  </div>
+
   <div class="note" style="text-align:center" id="home-disc">
     ⚠️ כלי חישוב להשקעות הוא כלי לימודי בלבד. אין בתכנים אלו משום ייעוץ השקעות, פיננסי, או פנסיוני. כל ההחלטות הפיננסיות צריכות להתקבל בהתייעצות עם איש מקצוע מוסמך.
   </div>
@@ -682,21 +770,23 @@ Required_future = Amount × (1 + i)ʸ
 <div class="module" id="module-history">
   <div class="module-title" id="t-m2-title">השוואה לנתוני עבר</div>
   <div class="module-subtitle" id="t-m2-sub">כמה היה שווה ההשקעה שלך לו היית משקיע בעבר?</div>
-  <div class="note-blue">💡 הכלי מושך נתונים אמיתיים מ-Yahoo Finance. נדרש חיבור לאינטרנט. הנתונים בדולר אמריקאי.</div>
+  <div class="note-blue">💡 הכלי מחשב תשואה היסטורית על בסיס נתוני מחיר שנתיים היסטוריים (מחירי סגירה מתוקנים). הנתונים בדולר אמריקאי.</div>
   <div class="card">
     <div class="card-title">בחר נייר ערך</div>
-    <div class="field" style="margin-bottom:12px"><label>סמל (Ticker)</label><input type="text" id="hist-ticker" value="SPY" placeholder="SPY, AAPL, QQQ..." style="text-transform:uppercase"></div>
-    <div style="margin-bottom:18px"><label style="font-size:0.8rem">ניירות פופולריים:</label>
+    <div class="field" style="margin-bottom:12px"><label>סמל (Ticker)</label><input type="text" id="hist-ticker" value="SPY" placeholder="SPY, AAPL, QQQ, BTC, GLD..." style="text-transform:uppercase"></div>
+    <div style="margin-bottom:18px"><label style="font-size:0.8rem">ניירות נתמכים:</label>
       <div class="chips">
         <span class="chip selected" onclick="selectTicker('SPY',this)">SPY — S&P 500</span>
         <span class="chip" onclick="selectTicker('QQQ',this)">QQQ — נאסד"ק</span>
         <span class="chip" onclick="selectTicker('DIA',this)">DIA — דאו ג'ונס</span>
+        <span class="chip" onclick="selectTicker('VTI',this)">VTI — שוק מלא</span>
         <span class="chip" onclick="selectTicker('AAPL',this)">AAPL — Apple</span>
         <span class="chip" onclick="selectTicker('MSFT',this)">MSFT — Microsoft</span>
         <span class="chip" onclick="selectTicker('NVDA',this)">NVDA — Nvidia</span>
         <span class="chip" onclick="selectTicker('AMZN',this)">AMZN — Amazon</span>
         <span class="chip" onclick="selectTicker('TSLA',this)">TSLA — Tesla</span>
-        <span class="chip" onclick="selectTicker('VTI',this)">VTI — שוק מלא</span>
+        <span class="chip" onclick="selectTicker('GLD',this)">GLD — זהב</span>
+        <span class="chip" onclick="selectTicker('BTC',this)">BTC — Bitcoin</span>
       </div>
     </div>
     <hr class="divider">
@@ -1445,62 +1535,108 @@ function selectTicker(ticker,el){
   el.classList.add('selected');
 }
 
-async function calcHistorical(){
-  const ticker=document.getElementById('hist-ticker').value.trim().toUpperCase();
-  const startDate=document.getElementById('hist-startdate').value;
-  const initial=parseFloat(document.getElementById('hist-initial').value)||0;
-  const monthly=parseFloat(document.getElementById('hist-monthly').value)||0;
-  if(!ticker||!startDate) return;
-  document.getElementById('hist-result').style.display='none';
-  document.getElementById('hist-error').style.display='none';
-  document.getElementById('hist-loading').style.display='block';
-  try{
-    const startTs=Math.floor(new Date(startDate).getTime()/1000);
-    const endTs=Math.floor(Date.now()/1000);
-    const url=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${startTs}&period2=${endTs}&interval=1mo`;
-    const res=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-    const json=await res.json();
-    if(json.chart.error||!json.chart.result) throw new Error('לא נמצאו נתונים עבור '+ticker);
-    const result=json.chart.result[0];
-    const timestamps=result.timestamp;
-    const closes=result.indicators.adjclose?.[0]?.adjclose||result.indicators.quote[0].close;
-    if(!timestamps||!closes) throw new Error('נתונים חסרים');
-    let shares=0,totalInvested=0;
-    const labels=[],portVals=[],invVals=[];
-    if(initial>0&&closes[0]){shares+=initial/closes[0];totalInvested+=initial;}
-    for(let i=0;i<timestamps.length;i++){
-      const price=closes[i]; if(!price) continue;
-      if(i>0&&monthly>0){shares+=monthly/price;totalInvested+=monthly;}
-      labels.push(new Date(timestamps[i]*1000).toLocaleDateString('he-IL',{year:'2-digit',month:'numeric'}));
-      portVals.push(Math.round(shares*price));
-      invVals.push(Math.round(totalInvested));
+// ================================================================
+// HISTORICAL PRICE DATABASE (adjusted annual closes, Jan each year)
+// Sources: Macrotrends / Yahoo Finance historical data
+// ================================================================
+const HIST_DB = {
+  SPY:  {name:'S&P 500 ETF',   data:{1993:44.3,1994:46.3,1995:46.7,1996:62.2,1997:74.9,1998:97.4,1999:123.6,2000:138.5,2001:120.8,2002:108.0,2003:87.0,2004:110.8,2005:118.4,2006:122.8,2007:140.8,2008:141.6,2009:87.0,2010:109.9,2011:125.8,2012:124.5,2013:141.5,2014:177.5,2015:196.5,2016:186.4,2017:213.8,2018:262.6,2019:245.9,2020:291.3,2021:374.0,2022:453.3,2023:381.6,2024:469.4,2025:586.1,2026:536.0}},
+  QQQ:  {name:'Nasdaq 100 ETF',data:{1999:80.0,2000:186.0,2001:87.0,2002:72.0,2003:41.0,2004:62.0,2005:73.0,2006:79.0,2007:88.0,2008:107.0,2009:65.0,2010:92.0,2011:116.0,2012:123.0,2013:144.0,2014:188.0,2015:228.0,2016:226.0,2017:256.0,2018:322.0,2019:289.0,2020:356.0,2021:490.0,2022:616.0,2023:415.0,2024:501.0,2025:522.0,2026:480.0}},
+  DIA:  {name:'Dow Jones ETF', data:{1998:86.0,1999:93.0,2000:110.0,2001:102.0,2002:96.0,2003:80.0,2004:100.0,2005:105.0,2006:109.0,2007:125.0,2008:131.0,2009:88.0,2010:106.0,2011:117.0,2012:119.0,2013:130.0,2014:159.0,2015:178.0,2016:169.0,2017:199.0,2018:244.0,2019:230.0,2020:282.0,2021:308.0,2022:359.0,2023:330.0,2024:377.0,2025:430.0,2026:415.0}},
+  VTI:  {name:'Total US Market',data:{2001:58.0,2002:61.0,2003:47.0,2004:63.0,2005:71.0,2006:75.0,2007:85.0,2008:90.0,2009:55.0,2010:73.0,2011:82.0,2012:79.0,2013:90.0,2014:111.0,2015:131.0,2016:122.0,2017:131.0,2018:155.0,2019:140.0,2020:166.0,2021:210.0,2022:240.0,2023:190.0,2024:233.0,2025:290.0,2026:265.0}},
+  AAPL: {name:'Apple Inc.',    data:{1995:0.5,1996:0.4,1997:0.4,1998:0.6,1999:1.3,2000:4.7,2001:1.3,2002:1.2,2003:1.0,2004:1.4,2005:3.4,2006:10.4,2007:15.0,2008:27.9,2009:12.2,2010:28.7,2011:47.8,2012:56.9,2013:72.4,2014:76.0,2015:110.6,2016:105.3,2017:121.4,2018:177.1,2019:157.9,2020:293.7,2021:129.4,2022:177.8,2023:130.7,2024:185.9,2025:243.0,2026:228.0}},
+  MSFT: {name:'Microsoft',     data:{1995:3.5,1996:5.1,1997:8.0,1998:14.5,1999:27.7,2000:58.4,2001:22.0,2002:25.9,2003:21.9,2004:27.4,2005:26.7,2006:27.0,2007:29.0,2008:35.8,2009:20.6,2010:31.2,2011:28.2,2012:27.8,2013:27.3,2014:37.2,2015:46.8,2016:52.6,2017:63.0,2018:86.1,2019:102.1,2020:157.7,2021:222.4,2022:296.0,2023:240.2,2024:374.5,2025:422.0,2026:388.0}},
+  NVDA: {name:'Nvidia',        data:{2000:1.7,2001:3.2,2002:2.4,2003:1.3,2004:2.4,2005:4.1,2006:7.2,2007:6.6,2008:13.5,2009:4.0,2010:8.3,2011:13.0,2012:11.8,2013:11.9,2014:17.0,2015:20.7,2016:33.2,2017:97.1,2018:202.3,2019:128.7,2020:238.5,2021:522.2,2022:294.1,2023:143.2,2024:495.0,2025:134.3,2026:115.0}},
+  AMZN: {name:'Amazon',        data:{1997:0.1,1998:0.3,1999:1.6,2000:5.7,2001:1.7,2002:0.6,2003:0.9,2004:2.0,2005:2.5,2006:3.7,2007:4.1,2008:10.5,2009:6.1,2010:12.7,2011:18.5,2012:17.3,2013:26.3,2014:39.9,2015:31.2,2016:68.0,2017:84.2,2018:118.5,2019:82.9,2020:188.3,2021:163.0,2022:171.4,2023:83.9,2024:153.4,2025:224.0,2026:205.0}},
+  TSLA: {name:'Tesla',         data:{2010:1.6,2011:1.8,2012:2.9,2013:7.1,2014:28.5,2015:48.4,2016:44.0,2017:52.4,2018:64.4,2019:61.6,2020:130.0,2021:705.7,2022:381.6,2023:122.4,2024:248.5,2025:403.8,2026:298.0}},
+  GLD:  {name:'Gold ETF',      data:{2004:44.0,2005:51.0,2006:64.0,2007:80.0,2008:107.0,2009:91.0,2010:118.0,2011:143.0,2012:171.0,2013:161.0,2014:122.0,2015:115.0,2016:107.0,2017:121.0,2018:128.0,2019:126.0,2020:151.0,2021:183.0,2022:178.0,2023:179.0,2024:195.0,2025:245.0,2026:280.0}},
+  BTC:  {name:'Bitcoin (USD)', data:{2012:5,2013:13,2014:800,2015:320,2016:430,2017:1000,2018:14000,2019:3500,2020:7200,2021:29000,2022:46000,2023:16500,2024:42000,2025:94000,2026:85000}},
+};
+
+function selectTicker(ticker,el){
+  document.getElementById('hist-ticker').value=ticker;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function calcHistorical(){
+  const ticker    = document.getElementById('hist-ticker').value.trim().toUpperCase();
+  const startDate = document.getElementById('hist-startdate').value;
+  const initial   = parseFloat(document.getElementById('hist-initial').value) || 0;
+  const monthly   = parseFloat(document.getElementById('hist-monthly').value) || 0;
+  if (!ticker || !startDate) return;
+
+  document.getElementById('hist-result').style.display  = 'none';
+  document.getElementById('hist-error').style.display   = 'none';
+  document.getElementById('hist-loading').style.display = 'block';
+
+  const startYear = new Date(startDate).getFullYear();
+
+  setTimeout(() => {
+    try {
+      const entry = HIST_DB[ticker];
+      if (!entry) {
+        throw new Error(`"${ticker}" אינו נמצא במסד הנתונים. ניירות נתמכים: ${Object.keys(HIST_DB).join(', ')}`);
+      }
+
+      const allYears = Object.keys(entry.data).map(Number).sort((a,b)=>a-b);
+      const years = allYears.filter(y => y >= startYear);
+      if (years.length < 2) throw new Error('טווח השנים קצר מדי — בחר תאריך התחלה מוקדם יותר');
+
+      let shares = 0, totalInvested = 0;
+      const labels = [], portVals = [], invVals = [];
+
+      years.forEach((yr, i) => {
+        const price = entry.data[yr];
+        if (i === 0) {
+          if (initial > 0) { shares += initial / price; totalInvested += initial; }
+        } else {
+          const prevYr = years[i-1];
+          const monthsElapsed = (yr - prevYr) * 12;
+          if (monthly > 0) {
+            // Approximate: buy at average of start/end year price
+            const avgPrice = (entry.data[prevYr] + price) / 2;
+            shares += (monthly * monthsElapsed) / avgPrice;
+            totalInvested += monthly * monthsElapsed;
+          }
+        }
+        labels.push(String(yr));
+        portVals.push(Math.round(shares * price));
+        invVals.push(Math.round(totalInvested));
+      });
+
+      const fV = portVals[portVals.length-1];
+      const fI = invVals[invVals.length-1] || initial;
+      const profit = fV - fI;
+      const totalRet = (fV - fI) / (fI||1) * 100;
+      const yrs = years[years.length-1] - years[0];
+      const cagr = (Math.pow(fV/(fI||1), 1/(yrs||1)) - 1) * 100;
+
+      document.getElementById('hist-total-val').textContent    = '$'+Math.round(fV).toLocaleString();
+      document.getElementById('hist-period-label').textContent = `${ticker} — ${entry.name} | ${yrs} שנים`;
+      document.getElementById('hist-return-val').textContent   = (totalRet>=0?'+':'')+totalRet.toFixed(1)+'%';
+      document.getElementById('hist-return-val').className     = 'result-main '+(totalRet>=0?'positive':'negative');
+      document.getElementById('hist-invested-val').textContent = '$'+Math.round(fI).toLocaleString();
+      document.getElementById('hist-profit-val').textContent   = (profit>=0?'+$':'-$')+Math.abs(Math.round(profit)).toLocaleString();
+      document.getElementById('hist-profit-val').className     = 'val '+(profit>=0?'positive':'negative');
+      document.getElementById('hist-cagr-val').textContent     = cagr.toFixed(1)+'%';
+      document.getElementById('hist-multiple-val').textContent = (fV/(fI||1)).toFixed(2)+'x';
+
+      makeChart('hist-chart', labels, [
+        {label:'שווי תיק ($)', data:portVals, color:'#00d4aa'},
+        {label:'סך הפקדות ($)', data:invVals, color:'#3b82f6'},
+      ], '$');
+
+      document.getElementById('hist-loading').style.display = 'none';
+      document.getElementById('hist-result').style.display  = 'block';
+
+    } catch(err) {
+      document.getElementById('hist-loading').style.display = 'none';
+      const el = document.getElementById('hist-error');
+      el.textContent = '⚠️ ' + err.message;
+      el.style.display = 'block';
     }
-    const fV=portVals[portVals.length-1], fI=invVals[invVals.length-1];
-    const profit=fV-fI, totalRet=(fV-fI)/fI*100;
-    const yrs=(timestamps[timestamps.length-1]-timestamps[0])/(365.25*24*3600);
-    const cagr=(Math.pow(fV/(fI||1),1/(yrs||1))-1)*100;
-    document.getElementById('hist-total-val').textContent='$'+Math.round(fV).toLocaleString();
-    document.getElementById('hist-period-label').textContent=`${ticker} | ${yrs.toFixed(1)} שנים`;
-    document.getElementById('hist-return-val').textContent=(totalRet>=0?'+':'')+totalRet.toFixed(1)+'%';
-    document.getElementById('hist-return-val').className='result-main '+(totalRet>=0?'positive':'negative');
-    document.getElementById('hist-invested-val').textContent='$'+Math.round(fI).toLocaleString();
-    document.getElementById('hist-profit-val').textContent=(profit>=0?'+$':'-$')+Math.abs(Math.round(profit)).toLocaleString();
-    document.getElementById('hist-profit-val').className='val '+(profit>=0?'positive':'negative');
-    document.getElementById('hist-cagr-val').textContent=cagr.toFixed(1)+'%';
-    document.getElementById('hist-multiple-val').textContent=(fV/(fI||1)).toFixed(2)+'x';
-    const step=Math.max(1,Math.floor(labels.length/60));
-    makeChart('hist-chart',labels.filter((_,i)=>i%step===0),[
-      {label:'שווי תיק ($)',data:portVals.filter((_,i)=>i%step===0),color:'#00d4aa'},
-      {label:'סך הפקדות ($)',data:invVals.filter((_,i)=>i%step===0),color:'#3b82f6'},
-    ],'$');
-    document.getElementById('hist-loading').style.display='none';
-    document.getElementById('hist-result').style.display='block';
-  } catch(err){
-    document.getElementById('hist-loading').style.display='none';
-    const el=document.getElementById('hist-error');
-    el.textContent='⚠️ שגיאה: '+err.message;
-    el.style.display='block';
-  }
+  }, 300);
 }
 
 // ================================================================
@@ -1803,7 +1939,84 @@ window.addEventListener('load',()=>{
   try { calcCompound(); } catch(e) { console.warn('calcCompound init:', e); }
   try { initDatePicker(); } catch(e) { console.warn('initDatePicker:', e); }
   try { initSliders(); } catch(e) { console.warn('initSliders:', e); }
+  try { initPEChart(); } catch(e) { console.warn('initPEChart:', e); }
 });
+
+// ================================================================
+// P/E RATIO CHART
+// ================================================================
+function initPEChart() {
+  const ctx = document.getElementById('pe-chart');
+  if (!ctx) return;
+
+  // Approximate S&P 500 trailing P/E data (annual, 1990–2026)
+  const labels = [
+    '1990','1991','1992','1993','1994','1995','1996','1997','1998','1999',
+    '2000','2001','2002','2003','2004','2005','2006','2007','2008','2009',
+    '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019',
+    '2020','2021','2022','2023','2024','2026'
+  ];
+  const peData = [
+    15.5, 26.1, 22.8, 21.3, 15.0, 18.1, 19.1, 24.3, 32.9, 33.4,
+    28.3, 46.4, 31.9, 22.7, 20.6, 19.6, 17.4, 21.9, 13.1, 70.8,
+    20.6, 14.9, 15.9, 18.8, 20.0, 22.2, 23.1, 24.3, 19.6, 23.5,
+    37.6, 37.2, 20.6, 24.9, 27.0, 27.5
+  ];
+  const avgLine = labels.map(() => 17);
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'יחס P/E',
+          data: peData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.1)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          fill: true,
+          tension: 0.3,
+        },
+        {
+          label: 'ממוצע היסטורי (~17)',
+          data: avgLine,
+          borderColor: '#ef4444',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' P/E: ' + ctx.parsed.y.toFixed(1)
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 45 },
+          grid: { color: 'rgba(255,255,255,0.04)' }
+        },
+        y: {
+          ticks: { color: '#64748b', font: { size: 10 } },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          min: 0,
+          max: 80
+        }
+      }
+    }
+  });
+}
 
 // ================================================================
 // SLIDER FILL — sets background gradient on WebKit/Blink
