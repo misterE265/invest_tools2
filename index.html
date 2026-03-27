@@ -183,7 +183,8 @@ body.light .result-stat { background:rgba(0,0,0,0.04); }
 .result-stat .val { font-family:'Space Mono',monospace; font-size:1rem; font-weight:700; color:var(--text); margin-bottom:3px; word-break:break-all; }
 .result-stat .lbl { font-size:0.73rem; color:var(--text-muted); }
 
-.chart-wrap { position:relative; height:240px; margin-top:8px; }
+.chart-wrap { position:relative; height:240px; margin-top:8px; overflow:hidden; width:100%; }
+.chart-wrap canvas { max-width:100% !important; display:block !important; }
 .divider { border:none; border-top:1px solid var(--border); margin:16px 0; }
 .positive { color:var(--accent)!important; } .negative { color:var(--danger)!important; } .neutral { color:var(--accent3)!important; }
 
@@ -1418,18 +1419,24 @@ function goHome() { goTo('home'); }
 // CHART helper
 const charts = {};
 function makeChart(id, labels, datasets, cur, opts={}) {
-  if(charts[id]) charts[id].destroy();
-  charts[id] = new Chart(document.getElementById(id), {
+  if(charts[id]) { charts[id].destroy(); delete charts[id]; }
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  // Ensure canvas fills its container correctly on mobile
+  canvas.style.width  = '100%';
+  canvas.style.height = '100%';
+  charts[id] = new Chart(canvas, {
     type: opts.type||'line',
     data: { labels, datasets: datasets.map(({label,data,color,fill=true,tension=0.3,borderDash=[]})=>({
       label, data,
       borderColor: color,
       backgroundColor: fill ? color+'18':'transparent',
-      borderWidth: 2.5, pointRadius:0, pointHoverRadius:5,
+      borderWidth: 2, pointRadius:0, pointHoverRadius:5,
       fill, tension, borderDash,
     }))},
     options: {
       responsive:true, maintainAspectRatio:false,
+      resizeDelay:0,
       interaction:{mode:'index',intersect:false},
       plugins:{
         legend:{labels:{color:'#94a3b8',font:{family:'Heebo',size:11},boxWidth:11}},
@@ -1437,8 +1444,13 @@ function makeChart(id, labels, datasets, cur, opts={}) {
           callbacks:{label:ctx=>` ${ctx.dataset.label}: ${cur||currency}${Math.round(ctx.parsed.y).toLocaleString()}`}}
       },
       scales:{
-        x:{ticks:{color:'#64748b',font:{family:'Heebo',size:9},maxTicksLimit:10},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{ticks:{color:'#64748b',font:{family:'Heebo',size:9},callback:v=>(cur||currency)+Math.round(v).toLocaleString()},grid:{color:'rgba(255,255,255,0.04)'}}
+        x:{ticks:{color:'#64748b',font:{family:'Heebo',size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#64748b',font:{family:'Heebo',size:9},maxTicksLimit:6,callback:v=>{
+          const n=Math.round(v);
+          if(Math.abs(n)>=1000000) return (cur||currency)+(n/1000000).toFixed(1)+'M';
+          if(Math.abs(n)>=1000) return (cur||currency)+(n/1000).toFixed(0)+'K';
+          return (cur||currency)+n.toLocaleString();
+        }},grid:{color:'rgba(255,255,255,0.04)'}}
       }
     }
   });
@@ -1622,13 +1634,20 @@ function calcHistorical(){
       document.getElementById('hist-cagr-val').textContent     = cagr.toFixed(1)+'%';
       document.getElementById('hist-multiple-val').textContent = (fV/(fI||1)).toFixed(2)+'x';
 
-      makeChart('hist-chart', labels, [
-        {label:'שווי תיק ($)', data:portVals, color:'#00d4aa'},
-        {label:'סך הפקדות ($)', data:invVals, color:'#3b82f6'},
-      ], '$');
-
       document.getElementById('hist-loading').style.display = 'none';
       document.getElementById('hist-result').style.display  = 'block';
+
+      // Let the DOM paint first so canvas has real dimensions, then draw
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          makeChart('hist-chart', labels, [
+            {label:'שווי תיק ($)', data:portVals, color:'#00d4aa'},
+            {label:'סך הפקדות ($)', data:invVals, color:'#3b82f6'},
+          ], '$');
+          // Force chart resize in case viewport is narrow
+          if (charts['hist-chart']) charts['hist-chart'].resize();
+        });
+      });
 
     } catch(err) {
       document.getElementById('hist-loading').style.display = 'none';
@@ -1935,6 +1954,16 @@ function updateDateDisplay(){
 // ================================================================
 // INIT
 // ================================================================
+// Force all visible charts to resize when orientation changes
+window.addEventListener('resize', () => {
+  Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
+});
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
+  }, 300);
+});
+
 window.addEventListener('load',()=>{
   try { calcCompound(); } catch(e) { console.warn('calcCompound init:', e); }
   try { initDatePicker(); } catch(e) { console.warn('initDatePicker:', e); }
