@@ -744,6 +744,71 @@ body.light .formula-eq {
     </div>
   </div>
 
+  <!-- CAPITAL GAINS TAX CALC -->
+  <div class="card">
+    <div class="card-title blue">💰 מחשבון מס רווחי הון</div>
+    <div class="note-blue" style="margin-bottom:14px">💡 בישראל מס רווחי הון עומד על 25% (לתושב ישראל). ניתן לקזז הפסדי הון.</div>
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="field"><label>עלות רכישה (<span class="cur-sym">₪</span>)</label><input type="number" id="cgt-buy" value="50000" min="0" step="1000"></div>
+      <div class="field"><label>מחיר מכירה (<span class="cur-sym">₪</span>)</label><input type="number" id="cgt-sell" value="80000" min="0" step="1000"></div>
+    </div>
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="range-wrap"><label>שיעור מס (%)</label>
+        <div class="range-row"><input type="range" id="cgt-rate" min="0" max="50" value="25" step="1" oninput="document.getElementById('cgt-rate-val').textContent=this.value+'%'"><div class="range-val" id="cgt-rate-val">25%</div></div>
+      </div>
+      <div class="range-wrap"><label>אינפלציה מצטברת בתקופה (%)</label>
+        <div class="range-row"><input type="range" id="cgt-infl" min="0" max="100" value="15" step="1" oninput="document.getElementById('cgt-infl-val').textContent=this.value+'%'"><div class="range-val" id="cgt-infl-val">15%</div></div>
+      </div>
+    </div>
+    <button class="btn btn-blue" onclick="calcCGT()" style="margin-bottom:14px">חשב</button>
+    <div id="cgt-result" style="display:none">
+      <div class="result-box blue">
+        <div class="result-main" id="cgt-net-val">₪0</div>
+        <div class="result-label">רווח נקי לאחר מס</div>
+        <div class="result-grid">
+          <div class="result-stat"><div class="val positive" id="cgt-gross-val">₪0</div><div class="lbl">רווח גולמי</div></div>
+          <div class="result-stat"><div class="val negative" id="cgt-tax-val">₪0</div><div class="lbl">מס לתשלום</div></div>
+          <div class="result-stat"><div class="val" id="cgt-eff-val">0%</div><div class="lbl">מס אפקטיבי על ההשקעה</div></div>
+          <div class="result-stat"><div class="val neutral" id="cgt-real-val">₪0</div><div class="lbl">רווח ריאלי לאחר מס ואינפלציה</div></div>
+        </div>
+        <div id="cgt-warning" style="display:none;margin-top:12px" class="note">⚠️ <span id="cgt-warning-text"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RULE OF 72 CALC -->
+  <div class="card">
+    <div class="card-title purple">⚡ מתי הכסף שלי מכפיל את עצמו? — כלל 72</div>
+    <div class="note-blue" style="margin-bottom:14px">💡 כלל 72 הוא קיצור מתמטי: חלק 72 בריבית השנתית כדי לקבל את מספר השנים להכפלה.</div>
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="range-wrap"><label>תשואה שנתית (%)</label>
+        <div class="range-row"><input type="range" id="r72-rate" min="0.5" max="30" value="8" step="0.5" oninput="document.getElementById('r72-rate-val').textContent=this.value+'%';calcR72()"><div class="range-val" id="r72-rate-val">8%</div></div>
+      </div>
+      <div class="field"><label>סכום התחלתי (<span class="cur-sym">₪</span>)</label><input type="number" id="r72-amount" value="100000" min="1000" step="1000" oninput="calcR72()"></div>
+    </div>
+    <div id="r72-result">
+      <div class="result-box purple">
+        <div class="result-main" id="r72-years-val">0 שנים</div>
+        <div class="result-label">זמן להכפלת הכסף (כלל 72)</div>
+        <div class="result-grid">
+          <div class="result-stat"><div class="val" id="r72-exact-val">0 שנים</div><div class="lbl">זמן מדויק (לוגריתם)</div></div>
+          <div class="result-stat"><div class="val positive" id="r72-double-val">₪0</div><div class="lbl">סכום לאחר הכפלה</div></div>
+          <div class="result-stat"><div class="val" id="r72-triple-val">0 שנים</div><div class="lbl">זמן לשילוש</div></div>
+          <div class="result-stat"><div class="val" id="r72-10x-val">0 שנים</div><div class="lbl">זמן לפי 10</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-title purple">השוואת ריביות — שנים להכפלה</div>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+          <table id="r72-table">
+            <thead><tr><th>ריבית שנתית</th><th>כלל 72</th><th>מדויק</th><th>×3</th><th>×10</th></tr></thead>
+            <tbody id="r72-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <div class="formula-box">
   <div class="formula-box-title">📐 נוסחאות החישוב — ריבית דריבית</div>
 
@@ -809,7 +874,40 @@ Loss% = (1 − 1/Factor) × 100
       <span>💡 דוגמה: 100₪ + 3 שנים + 3% = 100 × 1.03³ = 109.27₪</span>
     </div>
   </div>
-</div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">מס רווחי הון</div>
+    <div class="formula-eq">
+Gross_profit = Sell − Buy
+Tax = Gross_profit × tax_rate
+Net_profit = Gross_profit − Tax
+Real_profit = Net_profit − (Buy × inflation_rate)
+Effective_tax% = Tax / Buy × 100
+    </div>
+    <div class="formula-vars">
+      <span><b>Sell</b> = מחיר מכירה</span>
+      <span><b>Buy</b> = עלות רכישה</span>
+      <span><b>tax_rate</b> = שיעור המס (25% בישראל)</span>
+      <span><b>inflation_rate</b> = אינפלציה מצטברת בתקופה (עשרוני)</span>
+      <span>⚡ הרווח הריאלי = הרווח הנומינלי פחות מס פחות שחיקת האינפלציה על ההשקעה המקורית</span>
+    </div>
+  </div>
+
+  <div class="formula-section">
+    <div class="formula-section-title">כלל 72 — הכפלת הון</div>
+    <div class="formula-eq">
+Years_to_double ≈ 72 / r          (כלל 72)
+Years_exact     = ln(2) / ln(1+r) (מדויק)
+Years_to_triple = ln(3) / ln(1+r)
+Years_to_10x    = ln(10) / ln(1+r)
+    </div>
+    <div class="formula-vars">
+      <span><b>r</b> = ריבית שנתית באחוזים (לא עשרוני)</span>
+      <span><b>ln</b> = לוגריתם טבעי</span>
+      <span>💡 דוגמה: ריבית 8% → 72/8 = 9 שנים להכפלה (מדויק: 9.006)</span>
+      <span>⚡ ככל שהריבית גבוהה יותר, הכלל פחות מדויק — הלוגריתם תמיד מדויק</span>
+    </div>
+  </div>
 
 </div>
 
@@ -1603,6 +1701,79 @@ function calcInflationNeeds(){
 }
 
 // ================================================================
+// CAPITAL GAINS TAX
+// ================================================================
+function calcCGT(){
+  const buy=parseFloat(document.getElementById('cgt-buy').value)||0;
+  const sell=parseFloat(document.getElementById('cgt-sell').value)||0;
+  const taxRate=parseFloat(document.getElementById('cgt-rate').value)/100;
+  const inflRate=parseFloat(document.getElementById('cgt-infl').value)/100;
+  const gross=sell-buy;
+  const tax=Math.max(0,gross*taxRate);
+  const net=gross-tax;
+  const inflLoss=buy*inflRate;
+  const real=net-inflLoss;
+  const effTax=buy>0?(tax/buy*100):0;
+
+  document.getElementById('cgt-gross-val').textContent=fmtFull(gross);
+  document.getElementById('cgt-tax-val').textContent=fmtFull(tax);
+  document.getElementById('cgt-net-val').textContent=fmtFull(net);
+  document.getElementById('cgt-real-val').textContent=fmtFull(real);
+  document.getElementById('cgt-eff-val').textContent=effTax.toFixed(1)+'%';
+
+  const warn=document.getElementById('cgt-warning');
+  const warnTxt=document.getElementById('cgt-warning-text');
+  if(gross<=0){
+    warn.style.display='block';
+    warnTxt.textContent='אין רווח — אין מס לתשלום. ניתן לקזז הפסד זה מרווחי הון עתידיים.';
+  } else if(real<0){
+    warn.style.display='block';
+    warnTxt.textContent='הרווח הריאלי שלילי — לאחר מס ואינפלציה, הפסדת בכוח קנייה!';
+  } else {
+    warn.style.display='none';
+  }
+  document.getElementById('cgt-result').style.display='block';
+}
+
+// ================================================================
+// RULE OF 72
+// ================================================================
+function calcR72(){
+  const rate=parseFloat(document.getElementById('r72-rate').value)||8;
+  const amount=parseFloat(document.getElementById('r72-amount').value)||100000;
+  const r=rate/100;
+  const rule72=72/rate;
+  const exact=Math.log(2)/Math.log(1+r);
+  const triple=Math.log(3)/Math.log(1+r);
+  const ten=Math.log(10)/Math.log(1+r);
+
+  const fmt=y=>y.toFixed(1)+' שנים';
+  document.getElementById('r72-years-val').textContent=fmt(rule72);
+  document.getElementById('r72-exact-val').textContent=fmt(exact);
+  document.getElementById('r72-double-val').textContent=fmtFull(amount*2);
+  document.getElementById('r72-triple-val').textContent=fmt(triple);
+  document.getElementById('r72-10x-val').textContent=fmt(ten);
+
+  const rates=[1,2,3,4,5,6,7,8,10,12,15,20,25];
+  const tbody=document.getElementById('r72-tbody');
+  tbody.innerHTML=rates.map(rt=>{
+    const rr=rt/100;
+    const d72=(72/rt).toFixed(1);
+    const dex=(Math.log(2)/Math.log(1+rr)).toFixed(1);
+    const tr3=(Math.log(3)/Math.log(1+rr)).toFixed(1);
+    const tr10=(Math.log(10)/Math.log(1+rr)).toFixed(1);
+    const isActive=rt===rate;
+    return `<tr style="${isActive?'background:rgba(168,85,247,0.1);font-weight:700':''}">
+      <td class="tbl-mono">${rt}%</td>
+      <td class="tbl-mono">${d72}</td>
+      <td class="tbl-mono">${dex}</td>
+      <td class="tbl-mono">${tr3}</td>
+      <td class="tbl-mono">${tr10}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ================================================================
 // MODULE 2: HISTORICAL
 // ================================================================
 function selectTicker(ticker,el){
@@ -2033,6 +2204,7 @@ window.addEventListener('load',()=>{
   try { initDatePicker(); } catch(e) { console.warn('initDatePicker:', e); }
   try { initSliders(); } catch(e) { console.warn('initSliders:', e); }
   try { initPEChart(); } catch(e) { console.warn('initPEChart:', e); }
+  try { calcR72(); } catch(e) { console.warn('calcR72 init:', e); }
 });
 
 // ================================================================
